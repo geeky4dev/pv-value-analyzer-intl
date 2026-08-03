@@ -1,6 +1,7 @@
+
 import React from "react";
 
-import CreditPlans from "../components/CreditPlans";
+import CreditPlans from "../components/CreditPlans.jsx";
 
 
 function Credits() {
@@ -27,7 +28,6 @@ function Credits() {
         </div>
 
     );
-
 
 }
 
