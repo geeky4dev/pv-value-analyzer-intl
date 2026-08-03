@@ -38,6 +38,8 @@ import PaymentSuccess from "./pages/PaymentSuccess.jsx";
 
 import PaymentCancel from "./pages/PaymentCancel.jsx";
 
+import Home from "./pages/Home.jsx";
+
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5001";
 
 
@@ -498,7 +500,11 @@ return (
      />
 
       <Route
-        path="*"
+        path="/"
+        element={<Home />}
+    />
+      <Route
+        path="/analyse"
         element={
 
           <>
