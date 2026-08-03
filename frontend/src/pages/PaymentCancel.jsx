@@ -13,29 +13,20 @@ function PaymentCancel() {
 
 
             <h2 className="text-warning">
-
                 ⚠️ Zahlung abgebrochen
-
             </h2>
 
 
             <p className="mt-3">
-
                 Der Kauf wurde nicht abgeschlossen.
-
             </p>
 
 
             <button
-
                 className="btn btn-primary mt-3"
-
-                onClick={() => navigate("/credits")}
-
+                onClick={() => navigate("/")}
             >
-
-                Zurück zu Credits
-
+                Zurück zur Hauptseite
             </button>
 
 
