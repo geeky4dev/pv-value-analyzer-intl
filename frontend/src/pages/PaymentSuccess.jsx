@@ -1,8 +1,11 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 function PaymentSuccess() {
+
+
+    const navigate = useNavigate();
 
 
     return (
@@ -15,28 +18,22 @@ function PaymentSuccess() {
             </h2>
 
 
-            <p className="lead">
+            <p className="mt-3">
                 Vielen Dank für Ihren Kauf.
             </p>
 
 
-            <p>
-                Ihre Credits wurden Ihrem Konto gutgeschrieben.
-            </p>
-
-
-            <Link
-                to="/"
+            <button
                 className="btn btn-primary mt-3"
+                onClick={() => navigate("/")}
             >
-                Zur Hauptseite
-            </Link>
+                Zurück zur Hauptseite
+            </button>
 
 
         </div>
 
     );
-
 
 }
 
