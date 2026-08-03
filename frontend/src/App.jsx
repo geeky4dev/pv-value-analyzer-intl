@@ -34,6 +34,10 @@ import MeinProfil from "./components/MeinProfil.jsx";
 
 import Credits from "./pages/Credits.jsx";
 
+import PaymentSuccess from "./pages/PaymentSuccess.jsx";
+
+import PaymentCancel from "./pages/PaymentCancel.jsx";
+
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5001";
 
 
