@@ -1,8 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 function PaymentCancel() {
+
+    const navigate = useNavigate();
 
 
     return (
@@ -10,28 +12,36 @@ function PaymentCancel() {
         <div className="container mt-5 text-center">
 
 
-            <h2>
-                Zahlung abgebrochen
+            <h2 className="text-warning">
+
+                ⚠️ Zahlung abgebrochen
+
             </h2>
 
 
-            <p className="lead">
+            <p className="mt-3">
+
                 Der Kauf wurde nicht abgeschlossen.
+
             </p>
 
 
-            <Link
-                to="/credits"
-                className="btn btn-secondary mt-3"
+            <button
+
+                className="btn btn-primary mt-3"
+
+                onClick={() => navigate("/credits")}
+
             >
+
                 Zurück zu Credits
-            </Link>
+
+            </button>
 
 
         </div>
 
     );
-
 
 }
 
