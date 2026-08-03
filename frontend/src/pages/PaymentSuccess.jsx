@@ -1,21 +1,7 @@
-
 import React from "react";
-import { useNavigate } from "react-router-dom";
 
 
 function PaymentSuccess() {
-
-
-    const navigate = useNavigate();
-
-
-    const handleReturnHome = () => {
-
-        navigate("/", {
-            replace: true
-        });
-
-    };
 
 
     return (
@@ -23,39 +9,39 @@ function PaymentSuccess() {
         <div className="container mt-5 text-center">
 
 
-            <div className="card shadow p-5">
+            <h2 className="text-success">
+
+                ✅ Zahlung erfolgreich
+
+            </h2>
 
 
-                <h2 className="text-success">
+            <p className="mt-3">
 
-                    ✅ Zahlung erfolgreich
+                Vielen Dank für Ihren Kauf.
 
-                </h2>
-
-
-
-                <p className="mt-3 fs-5">
-
-                    Vielen Dank für Ihren Kauf.
-
-                </p>
+            </p>
 
 
+            <p className="text-muted">
 
-                <button
+                Ihre Credits wurden Ihrem Konto gutgeschrieben.
 
-                    className="btn btn-primary mt-4"
-
-                    onClick={handleReturnHome}
-
-                >
-
-                    Zurück zur Hauptseite
-
-                </button>
+            </p>
 
 
-            </div>
+
+            <button
+
+                className="btn btn-primary mt-3"
+
+                onClick={() => window.location.href = "/"}
+
+            >
+
+                Zurück zur Hauptseite
+
+            </button>
 
 
         </div>
@@ -66,4 +52,3 @@ function PaymentSuccess() {
 
 
 export default PaymentSuccess;
-
