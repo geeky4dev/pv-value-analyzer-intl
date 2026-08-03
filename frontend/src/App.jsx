@@ -390,7 +390,29 @@ function App() {
 
   }
 
+// ============================================
+// STRIPE RETURN PAGES (PUBLIC)
+// ============================================
 
+const path = window.location.pathname;
+
+
+if (path === "/payment-success") {
+
+    return <PaymentSuccess />;
+
+}
+
+
+if (path === "/payment-cancel") {
+
+    return <PaymentCancel />;
+
+}
+
+// ============================================
+// AUTHENTICATION REQUIRED
+// ============================================
 
 if (!user) {
 
