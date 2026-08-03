@@ -25,7 +25,7 @@ function PaymentSuccess() {
 
             <button
                 className="btn btn-primary mt-3"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/credits")}
             >
                 Zurück zur Hauptseite
             </button>
