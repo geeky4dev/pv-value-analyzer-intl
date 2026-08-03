@@ -63,15 +63,20 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
 
     return {
       h1: getTarifSet(12.35, 10.35, 7.78, 6.74, 5.50, 2.56, 2.38, 2.38, 1.60),
-      h2: getTarifSet(12.23, 10.25, 7.71, 6.67, 5.43, 2.51, 2.35, 2.35, 1.58),
-      h3: getTarifSet(12.11, 10.15, 7.63, 6.60, 5.37, 2.49, 2.33, 2.33, 1.57),
+      h2: getTarifSet(12.22, 10.25, 7.70, 6.66, 5.43, 2.51, 2.35, 2.35, 1.58),
+      h3: getTarifSet(12.10, 10.15, 7.63, 6.60, 5.37, 2.49, 2.33, 2.33, 1.57),
       isVolleinspeisung,
       size
     };
   }, [kwp, eigenverbrauchAnteil, betriebsmodell]);
 
   useEffect(() => {
-    const now = new Date("2026-03-16");
+    // Fecha fija utilizada solo para pruebas
+    // const now = new Date("2026-03-16");
+
+    // Fecha actual del ordenador/navegador
+    const now = new Date();
+
     let period = "h1";
     let periodName = "Feb-Jul 2026";
 
@@ -86,14 +91,61 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
 
     const direktVerkauf = () => {
       const { size, isVolleinspeisung } = tarifsData;
+
+      const values = {
+        h1: {
+          voll10: 12.74,
+          voll100: 10.75,
+          voll400: 8.94,
+          voll1000: 7.70,
+
+          teil10: 8.18,
+          teil40: 7.13,
+          teilOther: 5.90
+        },
+
+        h2: {
+          voll10: 12.61,
+          voll100: 10.64,
+          voll400: 8.85,
+          voll1000: 7.62,
+
+          teil10: 8.10,
+          teil40: 7.06,
+          teilOther: 5.84
+        },
+
+        h3: {
+          voll10: 12.48,
+          voll100: 10.53,
+          voll400: 8.76,
+          voll1000: 7.54,
+
+          teil10: 8.02,
+          teil40: 6.99,
+          teilOther: 5.78
+        }
+      };
+
+      const tarif = values[period];
+
       if (isVolleinspeisung) {
-        if (size <= 10) return 12.74;
-        if (size <= 100) return 10.75;
-        if (size <= 400) return 8.94;
-        return 7.70;
-      } 
-      return size <= 10 ? 8.18 : size <= 40 ? 7.13 : 5.90;
+        if (size <= 10) return tarif.voll10;
+
+        if (size <= 100) return tarif.voll100;
+
+        if (size <= 400) return tarif.voll400;
+
+        return tarif.voll1000;
+      }
+
+      if (size <= 10) return tarif.teil10;
+
+      if (size <= 40) return tarif.teil40;
+
+      return tarif.teilOther;
     };
+
 
     // CORRECCIÓN AQUÍ: Normalizamos el nombre del modelo para que coincida con las claves de tarifas
     let modelKey = betriebsmodell;

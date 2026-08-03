@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
+
 import os
 import uuid
 import base64
@@ -11,17 +12,150 @@ import requests
 import io
 import datetime
 import re
-import matplotlib
-matplotlib.use("Agg")
-matplotlib.rcParams['backend'] = 'Agg'
-import matplotlib.pyplot as plt
 import gc
 
+import matplotlib
+
+matplotlib.use("Agg")
+matplotlib.rcParams['backend'] = 'Agg'
+
+import matplotlib.pyplot as plt
+
+import stripe
+
+from dotenv import load_dotenv
+
 from config import Config
-from models import db
+
+from models import (
+    db,
+    User,
+    CreditAccount,
+    CreditTransaction,
+    Report
+)
+
+# ======================================================
+# LOAD ENVIRONMENT VARIABLES
+# ======================================================
+
+load_dotenv()
+
+# ======================================================
+# TEMP DIRECTORY FOR PDF FILES
+# ======================================================
+
+TEMP_DIR = os.path.join(
+    os.getcwd(),
+    "temp"
+)
+
+os.makedirs(
+    TEMP_DIR,
+    exist_ok=True
+)
 
 
-# -------------------- APP --------------------
+# ======================================================
+# STRIPE CONFIGURATION
+# ======================================================
+
+stripe.api_key = os.getenv(
+    "STRIPE_SECRET_KEY"
+)
+
+if not stripe.api_key:
+
+    raise RuntimeError(
+        "STRIPE_SECRET_KEY no está configurada"
+    )
+
+STRIPE_WEBHOOK_SECRET = os.getenv(
+    "STRIPE_WEBHOOK_SECRET"
+)
+
+if not STRIPE_WEBHOOK_SECRET:
+
+    raise RuntimeError(
+        "STRIPE_WEBHOOK_SECRET no está configurada"
+    )    
+
+# ======================================================
+# STRIPE PRODUCTS / CREDIT PACKAGES
+# ======================================================
+
+
+STRIPE_PRODUCTS = {
+    "starter": {
+        "price_id": "price_1TzhfTLNUnDmvz8q5aaqC8rL",
+        "credits": 10
+    },
+    "professional": {
+        "price_id": "price_1TzhQXLNUnDmvz8qWTlHOdCY",
+        "credits": 25
+    },
+    "expert": {
+        "price_id": "price_1TzhTSLNUnDmvz8qn8y9bhbs",
+        "credits": 50
+    },
+    "business": {
+        "price_id": "price_1TzhZzLNUnDmvz8qNppAjxOR",
+        "credits": 100
+    }
+}
+
+
+
+# ======================================================
+# CREDIT PACKAGES
+# ======================================================
+
+#CREDIT_PACKAGES = {
+
+#    "starter": {
+#        "name": "Starter",
+#        "credits": 10,
+#        "price_cents": 1500
+#    },
+
+#    "professional": {
+#        "name": "Professional",
+#        "credits": 25,
+#        "price_cents": 2900
+#    },
+
+#    "expert": {
+#        "name": "Expert",
+#        "credits": 50,
+#        "price_cents": 4900
+#    },
+
+#    "business": {
+#        "name": "Business",
+#        "credits": 100,
+#        "price_cents": 7900
+#    }
+
+#}
+
+# ======================================================
+# STRIPE CHECKOUT URLS
+# ======================================================
+
+STRIPE_SUCCESS_URL = os.getenv(
+    "STRIPE_SUCCESS_URL",
+    "http://localhost:5173/payment-success"
+)
+
+STRIPE_CANCEL_URL = os.getenv(
+    "STRIPE_CANCEL_URL",
+    "http://localhost:5173/payment-cancel"
+)
+
+
+# ======================================================
+# FLASK APP
+# ======================================================
 app = Flask(__name__)
 
 app.config.from_object(Config)
@@ -29,6 +163,769 @@ app.config.from_object(Config)
 db.init_app(app)
 
 CORS(app)
+
+# -------------------- Credits Endpoint --------------------
+
+@app.route("/credits/<email>", methods=["GET"])
+def get_credits(email):
+
+    user = User.query.filter_by(
+        email=email
+    ).first()
+
+    if not user:
+        return jsonify({
+            "balance": 0
+        })
+
+    account = CreditAccount.query.filter_by(
+        user_id=user.id
+    ).first()
+
+    if not account:
+        return jsonify({
+            "balance": 0
+        })
+
+    return jsonify({
+        "balance": account.balance
+    })
+
+
+# ======================================================
+# CREDIT MANAGEMENT
+# ======================================================
+
+
+def get_user_by_email(email):
+
+    return User.query.filter_by(
+        email=email
+    ).first()
+
+
+
+def create_user_if_not_exists(
+    supabase_user_id,
+    email,
+    name=None,
+    company=None
+):
+
+    user = User.query.filter_by(
+        id=supabase_user_id
+    ).first()
+
+
+    if user:
+
+        return user
+
+
+
+    try:
+
+        user = User(
+            id=supabase_user_id,
+            email=email,
+            name=name,
+            company=company
+        )
+
+
+        db.session.add(user)
+
+
+        db.session.flush()
+
+
+
+        # ==========================================
+        # WELCOME CREDIT
+        # ==========================================
+
+        account = CreditAccount(
+            user_id=user.id,
+            balance=1
+        )
+
+
+        db.session.add(account)
+
+
+
+        transaction = CreditTransaction(
+
+            user_id=user.id,
+
+            type="WELCOME_CREDIT",
+
+            amount=1
+
+        )
+
+
+        db.session.add(transaction)
+
+
+
+        db.session.commit()
+
+
+        return user
+
+
+
+    except Exception:
+
+
+        db.session.rollback()
+
+        raise
+
+
+
+
+
+def check_credit_available(user):
+
+    account = user.credit_account
+
+
+
+    if not account:
+
+        raise Exception(
+            "Kein Credit-Konto vorhanden"
+        )
+
+
+
+    if account.balance <= 0:
+
+        raise Exception(
+            "Keine verfügbaren Credits"
+        )
+
+
+    return True
+
+
+
+def consume_credit(
+    user,
+    credit_type
+):
+
+    try:
+
+        account = user.credit_account
+
+
+
+        if not account:
+
+            raise Exception(
+                "Kein Credit-Konto vorhanden"
+            )
+
+
+        if account.balance <= 0:
+
+            raise Exception(
+                "Keine verfügbaren Credits"
+            )
+
+
+
+        account.balance -= 1
+
+
+
+        transaction = CreditTransaction(
+
+            user_id=user.id,
+
+            type=credit_type,
+
+            amount=-1
+
+        )
+
+
+        db.session.add(transaction)
+
+
+
+        db.session.commit()
+
+
+
+    except Exception:
+
+
+        db.session.rollback()
+
+        raise
+
+
+# ======================================================
+# ADD PURCHASED CREDITS
+# ======================================================
+
+def add_credit(
+    user_id,
+    credits,
+    credit_type
+):
+
+
+    try:
+
+
+        account = CreditAccount.query.filter_by(
+            user_id=user_id
+        ).first()
+
+
+
+        if not account:
+
+            raise Exception(
+                "Credit account not found"
+            )
+
+
+
+        account.balance += credits
+
+
+
+        transaction = CreditTransaction(
+
+            user_id=user_id,
+
+            type=credit_type,
+
+            amount=credits
+
+        )
+
+
+
+        db.session.add(transaction)
+
+
+
+        db.session.commit()
+
+
+
+        return True
+
+
+
+    except Exception:
+
+
+        db.session.rollback()
+
+        raise
+
+
+# ======================================================
+# STRIPE CHECKOUT
+# ======================================================
+
+@app.route(
+    "/stripe/create-checkout-session",
+    methods=["POST"]
+)
+def create_checkout_session():
+
+    try:
+
+        # ==============================================
+        # RECIBIR DATOS DEL FRONTEND
+        # ==============================================
+
+        data = request.get_json(
+            silent=True
+        )
+
+
+        if not data:
+
+            return jsonify({
+                "error": "JSON body required"
+            }), 400
+
+
+        package_key = data.get(
+            "package"
+        )
+
+
+        user_id = data.get(
+            "user_id"
+        )
+
+
+        user_email = data.get(
+            "user_email"
+        )
+
+
+        # ==============================================
+        # VALIDAR PAQUETE
+        # ==============================================
+
+        if not package_key:
+
+            return jsonify({
+                "error": "Package required"
+            }), 400
+
+
+        package_key = (
+            package_key
+            .strip()
+            .lower()
+        )
+
+
+        if package_key not in STRIPE_PRODUCTS:
+
+            return jsonify({
+                "error": "Invalid credit package"
+            }), 400
+
+
+        # ==============================================
+        # VALIDAR USER ID
+        # ==============================================
+
+        if not user_id:
+
+            return jsonify({
+                "error": "User ID required"
+            }), 400
+
+
+        # ==============================================
+        # BUSCAR USUARIO EN public.users
+        # ==============================================
+
+        user = User.query.filter_by(
+            id=user_id
+        ).first()
+
+
+        if not user:
+
+            return jsonify({
+                "error": "User not found"
+            }), 404
+
+
+        # ==============================================
+        # VALIDAR EMAIL SOLO SI EL FRONTEND LO ENVÍA
+        # ==============================================
+
+        if (
+            user_email
+            and user.email.lower()
+            != user_email.strip().lower()
+        ):
+
+            return jsonify({
+                "error": (
+                    "User email does not match "
+                    "the registered user"
+                )
+            }), 403
+
+
+        # ==============================================
+        # OBTENER CONFIGURACIÓN DEL PAQUETE
+        # ==============================================
+
+        product = STRIPE_PRODUCTS[
+            package_key
+        ]
+
+
+        price_id = product.get(
+            "price_id"
+        )
+
+
+        credits = product.get(
+            "credits"
+        )
+
+
+        # ==============================================
+        # VALIDAR PRICE ID
+        # ==============================================
+
+        if not price_id:
+
+            return jsonify({
+                "error": (
+                    "Stripe Price ID not configured"
+                )
+            }), 500
+
+
+        # ==============================================
+        # VALIDAR CANTIDAD DE CRÉDITOS
+        # ==============================================
+
+        if not credits:
+
+            return jsonify({
+                "error": (
+                    "Credit amount not configured"
+                )
+            }), 500
+
+
+        # ==============================================
+        # DEBUG LOCAL
+        # ==============================================
+
+        print(
+            "========== STRIPE CHECKOUT =========="
+        )
+
+        print(
+            "USER ID:",
+            user.id
+        )
+
+        print(
+            "USER EMAIL:",
+            user.email
+        )
+
+        print(
+            "PACKAGE:",
+            package_key
+        )
+
+        print(
+            "PRICE ID:",
+            price_id
+        )
+
+        print(
+            "CREDITS:",
+            credits
+        )
+
+        print(
+            "====================================="
+        )
+
+
+        # ==============================================
+        # CREAR STRIPE CHECKOUT SESSION
+        # ==============================================
+        
+        checkout_session = (
+            stripe.checkout.Session.create(
+
+                mode="payment",
+
+                customer_email=user.email,
+
+
+                line_items=[
+                    {
+                        "price": price_id,
+                        "quantity": 1
+                    }
+                ],    
+                success_url=(
+                    STRIPE_SUCCESS_URL
+                ),
+
+                cancel_url=(
+                    STRIPE_CANCEL_URL
+                ),
+
+                metadata={
+
+                    "user_id": str(
+                        user.id
+                    ),
+
+                    "user_email": (
+                        user.email
+                    ),
+
+                    "package": (
+                        package_key
+                    ),
+
+                    "credits": str(
+                        credits
+                    )
+
+                }
+
+            )
+        )
+
+
+        # ==============================================
+        # RESPUESTA AL FRONTEND
+        # ==============================================
+
+        return jsonify({
+
+            "checkout_url": (
+                checkout_session.url
+            ),
+
+            "session_id": (
+                checkout_session.id
+            )
+
+        }), 200
+
+
+    except stripe.error.StripeError as e:
+
+        print(
+            "STRIPE API ERROR:",
+            str(e)
+        )
+
+
+        return jsonify({
+
+            "error": (
+                "Stripe Checkout could not "
+                "be created"
+            ),
+
+            "details": str(e)
+
+        }), 500
+
+
+    except Exception as e:
+
+        print(
+            "STRIPE CHECKOUT ERROR:"
+        )
+
+        print(
+            traceback.format_exc()
+        )
+
+
+        return jsonify({
+
+            "error": str(e)
+
+        }), 500
+
+# ======================================================
+# STRIPE WEBHOOK
+# ======================================================
+
+
+@app.route(
+    "/stripe/webhook",
+    methods=["POST"]
+)
+def stripe_webhook():
+
+
+    payload = request.data
+
+
+    sig_header = request.headers.get(
+        "Stripe-Signature"
+    )
+
+
+    try:
+
+        event = stripe.Webhook.construct_event(
+
+            payload,
+
+            sig_header,
+
+            STRIPE_WEBHOOK_SECRET
+
+        )
+
+
+
+    except ValueError:
+
+
+        return jsonify({
+
+            "error": "Invalid payload"
+
+        }),400
+
+
+
+    except stripe.error.SignatureVerificationError:
+
+
+        return jsonify({
+
+            "error": "Invalid signature"
+
+        }),400
+
+
+
+
+
+    # ==================================================
+    # PAYMENT SUCCESS
+    # ==================================================
+
+
+    if event["type"] == "checkout.session.completed":
+
+
+        session = event["data"]["object"]
+
+
+        metadata = session.metadata
+
+
+        user_id = metadata["user_id"]
+
+
+        credits_value = metadata["credits"]
+
+
+        package = metadata["package"]
+
+
+
+        if not user_id:
+
+
+            return jsonify({
+
+                "error":
+                "Missing user_id metadata"
+
+            }),400
+
+
+
+        if not credits_value:
+
+
+            return jsonify({
+
+                "error":
+                "Missing credits metadata"
+
+            }),400
+
+
+
+        credits = int(
+            credits_value
+        )
+
+
+
+        print(
+            "========== STRIPE PAYMENT =========="
+        )
+
+
+        print(
+            "USER:",
+            user_id
+        )
+
+
+        print(
+            "PACKAGE:",
+            package
+        )
+
+
+        print(
+            "CREDITS:",
+            credits
+        )
+
+
+        print(
+            "===================================="
+        )
+
+
+        # ==================================================
+        # UPDATE USER PLAN
+        # ==================================================
+
+        user = User.query.filter_by(
+            id=user_id
+        ).first()
+
+
+        if user:
+
+            user.current_plan = package.capitalize()
+
+            db.session.commit()
+
+
+            print(
+                "PLAN UPDATED:",
+                user.current_plan
+            )
+
+
+        else:
+
+            print(
+                "USER NOT FOUND FOR PLAN UPDATE:",
+                user_id
+            )
+
+
+        # ==================================================
+        # ADD CREDITS
+        # ==================================================
+
+        add_credit(
+
+            user_id=user_id,
+
+            credits=credits,
+
+            credit_type=
+            f"STRIPE_{package.upper()}"
+
+        )
+
+
+
+    return jsonify({
+
+        "received": True
+
+    }),200
+
 
 # -------------------- Temporal Endpoint --------------------
 @app.route("/test-db")
@@ -51,7 +948,143 @@ def test_db():
             "message": str(e)
         }), 500
 
-TEMP_DIR = tempfile.gettempdir()
+# ======================================================
+# REPORT MANAGEMENT
+# ======================================================
+       
+def create_report_record(
+    user,
+    data,
+    filename
+):
+
+    """
+    Guarda historial del PDF generado.
+    """
+
+    anlage = data.get(
+        "anlagendaten",
+        {}
+    )
+
+    print("DEBUG ANLAGE:", anlage)
+
+
+    # =====================================
+    # CONVERTIR KWP A NUMERIC PARA POSTGRES
+    # =====================================
+
+    kwp_value = anlage.get("kwp")
+
+    if kwp_value in ("", None):
+        kwp_value = None
+    else:
+        kwp_value = float(kwp_value)
+
+
+
+    report = Report(
+
+        user_id=user.id,
+
+        report_type="PDF_WERTGUTACHTEN",
+
+        filename=filename,
+
+        anlagenname=(
+            anlage.get("name")
+            or f"PV Anlage {anlage.get('plz', '')} {anlage.get('ort', '')}".strip()
+            or "PV Anlage"
+        ),
+
+        kwp=kwp_value
+    )
+
+
+    db.session.add(report)
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+        raise
+
+
+    return report
+
+
+# ======================================================
+# USER SYNCHRONIZATION
+# Supabase Auth -> public.users -> credit_accounts
+# ======================================================
+
+@app.route("/users/sync", methods=["POST"])
+def sync_user():
+
+    data = request.get_json()
+
+    supabase_user_id = data.get("user_id")
+    email = data.get("email")
+
+
+    if not supabase_user_id:
+        return jsonify({
+            "error": "User id required"
+        }), 400
+
+
+    if not email:
+        return jsonify({
+            "error": "Email required"
+        }), 400
+
+
+    try:
+
+        user = create_user_if_not_exists(
+            supabase_user_id=supabase_user_id,
+            email=email,
+            name=data.get("name"),
+            company=data.get("company")
+        )
+
+
+        return jsonify({
+
+            "id": str(user.id),
+
+            "email": user.email,
+
+            "current_plan": (
+                user.current_plan
+                if user.current_plan
+                else "-"
+            ),
+
+            "balance": (
+                user.credit_account.balance
+                if user.credit_account
+                else 0
+            )
+
+        }), 200
+
+
+    except Exception as e:
+
+        print(
+            "SYNC USER ERROR:",
+            e
+        )
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 # ======================================================
 # SAFE TEXT
@@ -228,13 +1261,71 @@ def get_eeg_data(bm, kwp):
 
     return einspeiseverguetung, eeg_periode
 
+
+
 # ======================================================
 # PDF GUTACHTEN DIN 5008
 # ======================================================
 @app.route("/pdf", methods=["POST"])
 def pdf():
+
     try:
+
         data = request.get_json() or {}
+
+        # ======================================================
+        # USER / CREDIT VALIDATION
+        # ======================================================
+
+        email = data.get("user_email")
+
+        supabase_user_id = data.get("user_id")
+
+
+        if not email:
+            return jsonify({
+                "error": "User email required"
+            }), 400
+
+
+        if not supabase_user_id:
+            return jsonify({
+                "error": "Supabase user id required"
+            }), 400
+
+
+
+        user = create_user_if_not_exists(
+            supabase_user_id=supabase_user_id,
+            email=email,
+            name=data.get("user_name"),
+            company=data.get("company")
+        )
+
+        print("========== CREDIT DEBUG ==========")
+
+        print("USER ID:", user.id)
+        print("USER EMAIL:", user.email)
+
+        account = CreditAccount.query.filter_by(
+            user_id=user.id
+        ).first()
+
+        print("CREDIT ACCOUNT:", account)
+
+        if account:
+            print("BALANCE:", account.balance)
+
+        print("==================================")
+
+        try:
+            check_credit_available(user)
+
+        except Exception as e:
+            return jsonify({
+                "error": str(e),
+                "code": "NO_CREDITS"
+            }), 402
 
         # ======================================================
         # LCOE CALCULATION
@@ -1320,13 +2411,41 @@ def pdf():
         pdf_buffer = io.BytesIO(pdf_output)
         pdf_buffer.seek(0)
 
+        # ======================================================
+        # SAVE CREDIT TRANSACTION + REPORT HISTORY
+        # ======================================================
+
+        try:
+
+            consume_credit(
+                user,
+                "PDF_WERTGUTACHTEN"
+            )
+
+
+            create_report_record(
+                user=user,
+                data=data,
+                filename="PV-WERTGUTACHTEN.pdf"
+            )
+
+
+        except Exception:
+
+            db.session.rollback()
+
+            raise
+
+
         # DELETE TEMP CASHFLOW CHART
         if chart_path and os.path.exists(chart_path):
             os.remove(chart_path)
 
+
         # DELETE TEMP PIE CHART
         if pie_chart_path and os.path.exists(pie_chart_path):
-            os.remove(pie_chart_path)    
+            os.remove(pie_chart_path)
+
 
         return send_file(
             pdf_buffer,
@@ -1336,8 +2455,63 @@ def pdf():
         )
 
     except Exception as e:
+
         print(traceback.format_exc())
-        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+
+        return jsonify({
+            "error": str(e)
+        }), 500    
+
+# ======================================================
+# REPORT HISTORY
+# ======================================================
+
+@app.route("/reports/<email>", methods=["GET"])
+def get_reports(email):
+
+    try:
+
+        user = User.query.filter_by(
+            email=email
+        ).first()
+
+        if not user:
+            return jsonify({
+                "error": "User not found"
+            }), 404
+
+
+        reports = Report.query.filter_by(
+            user_id=user.id
+        ).order_by(
+            Report.created_at.desc()
+        ).all()
+
+
+        result = []
+
+        for report in reports:
+
+            result.append({
+                "id": str(report.id),
+                "report_type": report.report_type,
+                "filename": report.filename,
+                "anlagenname": report.anlagenname,
+                "kwp": float(report.kwp) if report.kwp else 0,
+                "created_at": report.created_at.isoformat()
+            })
+
+
+        return jsonify(result), 200
+
+
+    except Exception as e:
+
+        print(traceback.format_exc())
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))

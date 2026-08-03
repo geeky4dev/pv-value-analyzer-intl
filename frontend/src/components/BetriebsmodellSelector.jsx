@@ -58,9 +58,9 @@ function BetriebsmodellSelector({ value, onChange }) {
           <p>
             Die gesamte erzeugte Energie wird ins Netz eingespeist und gemäß EEG
             vergütet: <br></br><br></br>
-            • ca. 12,34 ct/kWh (bis 10 kWp Volleinspeisung)<br></br>
-            • 10,35 ct/kWh (bis 40 kWp Volleinspeisung)<br></br>
-            • 10,35 ct/kWh (bis 100 kWp Volleinspeisung)<br></br><br></br>
+            • ca. 12,22 ct/kWh (bis 10 kWp Volleinspeisung)<br></br>
+            • ca. 10,25 ct/kWh (über 10 bis 100 kWp Volleinspeisung)<br></br>
+            • ca. 10,25 ct/kWh (über 100 kWp bis 100 kWp Volleinspeisung)<br></br>
             Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung
 
           </p>
@@ -69,9 +69,9 @@ function BetriebsmodellSelector({ value, onChange }) {
           <p>
             Ein Teil des Solarstroms wird selbst verbraucht, der Rest ins Netz eingespeist.<br></br><br></br>  
             Einspeisung wird gemäß EEG vergütet:<br></br> 
-            • ca. 7,78 ct/kWh (bis 10 kW Teileinspeisung) / 12,34 ct/kWh (Volleinspeisung)<br></br> 
-            • 6,73 ct/kWh (bis 40 kW Teileinspeisung) / 10,35 ct/kWh (Volleinspeisung)<br></br> 
-            • 5,50 ct/kWh (bis 100 kW Teileinspeisung) / 10,35 ct/kWh (Volleinspeisung)<br></br><br></br>  
+            • ca. 7,70 ct/kWh (bis 10 kW Teileinspeisung) / 12,22 ct/kWh (Volleinspeisung)<br></br> 
+            • 6,66 ct/kWh (bis 40 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br> 
+            • 5,45 ct/kWh (bis 100 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br><br></br>  
             Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung<br></br> 
           </p>
         )}
@@ -81,35 +81,35 @@ function BetriebsmodellSelector({ value, onChange }) {
             erhöht werden.<br></br>  
             Ein Teil des Solarstroms wird selbst verbraucht, der Rest ins Netz eingespeist.<br></br><br></br>  
             Einspeisung wird gemäß EEG vergütet:<br></br> 
-            • ca. 7,78 ct/kWh (bis 10 kW Teileinspeisung) / 12,34 ct/kWh (Volleinspeisung)<br></br> 
-            • 6,73 ct/kWh (bis 40 kW Teileinspeisung) / 10,35 ct/kWh (Volleinspeisung)<br></br> 
-            • 5,50 ct/kWh (bis 100 kW Teileinspeisung) / 10,35 ct/kWh (Volleinspeisung)<br></br><br></br>  
+            • ca. 7,70 ct/kWh (bis 10 kW Teileinspeisung) / 12,22 ct/kWh (Volleinspeisung)<br></br> 
+            • 6,66 ct/kWh (bis 40 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br> 
+            • 5,45 ct/kWh (bis 100 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br><br></br>  
             Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung<br></br> 
           </p>
         )}
         {value === "mieterstrom" && (
           <p>
             Der erzeugte Strom wird direkt an Mieter im Gebäude verkauft. Überschüsse ins Netz. <br></br><br></br>
-            Mieterstrom - EEG-Zuschlag 2026:<br></br>
-            • ca. 2,56 ct/kWh (bis 10 kWp Mieterstromzuschlag)<br></br>
-            • 2,38 ct/kWh (bis 40 kWp Mieterstromzuschlag)<br></br>
-            • 2,38 ct/kWh (bi 100 kWp Mieterstromzuschlag)<br></br>
-            • 1,60 ct/kWh (ab 100–1000 kWp Mieterstromzuschlag)<br></br><br></br>
+            Mieterstromzuschlag gemäß EEG (Inbetriebnahme 01.08.2026–31.01.2027):<br></br>
+            • ca. 2,51 ct/kWh (bis 10 kWp Mieterstromzuschlag)<br></br>
+            • 2,35 ct/kWh (bis 40 kWp Mieterstromzuschlag)<br></br>
+            • 2,35 ct/kWh (bis 100 kWp Mieterstromzuschlag)<br></br>
+            • 1,58 ct/kWh (ab 100–1000 kWp Mieterstromzuschlag)<br></br><br></br>
             Einnahmen = Mieterstrom + Einspeisung<br></br>
             Mieterstrom = PV-Produktion × Mieterstromanteil × (Strompreis Mieter + Mieterstromzuschlag)<br></br>
-            Einspeisung = PV-Produktion × (1 − Mieterstromanteil) × EEG-Vergütung (ca. 7,78 ct/kWh)<br></br><br></br>
+            Einspeisung = PV-Produktion × (1 − Mieterstromanteil) × EEG-Vergütung (ca. 7,70 ct/kWh)<br></br><br></br>
             Beispiel: 40.000 kWh → 40 % Mieterstrom ≈ 5.050 € / 60 % Einspeisung ≈ 1.320 € → Jahreseinnahmen ≈ 6.370 €.
           </p>
         )}
         {value === "direktvermarktung" && (
           <p>
             Der Strom wird direkt am Strommarkt verkauft (typisch für größere Anlagen).<br></br><br></br>
-            Für Anlagen bis 1.000 kW (Inbetriebnahme 02–07/2026) gelten z. B. folgende anzulegende Werte:<br></br>
-            • ca. 8,18 ct/kWh (bis 10 kW Teileinspeisung) / 12,74 ct/kWh (Volleinspeisung)<br></br>
-            • 7,13 ct/kWh (bis 40 kW Teileinspeisung) / 10,75 ct/kWh (Volleinspeisung)<br></br>
-            • 5,90 ct/kWh (bis 100 kW Teileinspeisung) / 10,75 ct/kWh (Volleinspeisung)<br></br>
-            • 5,90 ct/kWh (bis 400 kW Teileinspeisung) / 8,94 ct/kWh (Volleinspeisung)<br></br>
-            • 5,90 ct/kWh – 7,70 ct/kWh (bis 1.000 kW, je nach Volleinspeisung)<br></br><br></br>
+            Für Anlagen bis 1.000 kW (Inbetriebnahme 08/2026–01/2027) gelten folgende anzulegende Werte:<br></br>
+          • ca. 8,10 ct/kWh (bis 10 kWp Teileinspeisung) / 12,61 ct/kWh (Volleinspeisung)<br></br>
+          • ca. 7,06 ct/kWh (über 10 bis 40 kWp Teileinspeisung) / 10,64 ct/kWh (Volleinspeisung)<br></br>
+          • ca. 5,84 ct/kWh (über 40 bis 100 kWp Teileinspeisung) / 10,64 ct/kWh (Volleinspeisung)<br></br>
+          • ca. 5,84 ct/kWh (über 100 bis 400 kWp Teileinspeisung) / 8,85 ct/kWh (Volleinspeisung)<br></br>
+          • ca. 5,84–7,62 ct/kWh (über 400 bis 1.000 kWp, abhängig von der Volleinspeisung)<br></br><br></br>
             Typisch: 30–60 % Eigenverbrauch (mit Speicher), 20–40 % ohne; Rest (40–70 %) Einspeisung.<br></br>
           </p>
         )}

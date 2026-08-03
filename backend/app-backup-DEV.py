@@ -16,6 +16,20 @@ matplotlib.use("Agg")
 matplotlib.rcParams['backend'] = 'Agg'
 import matplotlib.pyplot as plt
 import gc
+from flask_sqlalchemy import SQLAlchemy
+from models import User, CreditAccount, CreditTransaction, Report
+
+db = SQLAlchemy()
+
+# -------------------- APP --------------------
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL"
+)
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db.init_app(app)
 
 
 # -------------------- APP --------------------
@@ -216,6 +230,30 @@ def get_eeg_data(bm, kwp):
             einspeiseverguetung = "Marktpreis"
 
     return einspeiseverguetung, eeg_periode
+
+# ======================================================
+# CONSULTAR CREDITOS
+# ======================================================
+
+@app.route("/credits/<email>", methods=["GET"])
+def credits(email):
+
+    user = User.query.filter_by(
+        email=email
+    ).first()
+
+
+    if not user:
+        return jsonify({
+            "balance":0
+        })
+
+
+    return jsonify({
+        "balance":
+        user.credit_account.balance
+    })
+
 
 # ======================================================
 # PDF GUTACHTEN DIN 5008
@@ -1315,7 +1353,30 @@ def pdf():
 
         # DELETE TEMP PIE CHART
         if pie_chart_path and os.path.exists(pie_chart_path):
-            os.remove(pie_chart_path)    
+            os.remove(pie_chart_path)   
+
+
+                # ======================================================
+        # SAVE REPORT HISTORY
+        # ======================================================
+
+
+        report = Report(
+            user_id=user.id,
+            report_type="PDF_WERTGUTACHTEN",
+            filename="PV-WERTGUTACHTEN.pdf",
+            anlagenname=
+                data.get("anlagendaten", {})
+                    .get("name"),
+            kwp=
+                data.get("anlagendaten", {})
+                    .get("kwp")
+        )
+
+
+        db.session.add(report)
+
+        db.session.commit()     
 
         return send_file(
             pdf_buffer,

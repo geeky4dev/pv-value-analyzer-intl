@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 
@@ -17,33 +17,40 @@ class User(db.Model):
     id = db.Column(
         db.UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid4
     )
 
     email = db.Column(
-        db.String,
+        db.String(255),
         unique=True,
-        nullable=False
+        nullable=False,
+        index=True
     )
 
     name = db.Column(
-        db.String,
+        db.String(255),
         nullable=True
     )
 
     company = db.Column(
-        db.String,
+        db.String(255),
+        nullable=True
+    )
+
+    current_plan = db.Column(
+        db.String(50),
         nullable=True
     )
 
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc)
     )
 
 
-    # Relaciones
+    # -------------------------
+    # RELACIONES
+    # -------------------------
 
     credit_account = db.relationship(
         "CreditAccount",
@@ -52,11 +59,13 @@ class User(db.Model):
         cascade="all, delete-orphan"
     )
 
+
     credit_transactions = db.relationship(
         "CreditTransaction",
         back_populates="user",
         cascade="all, delete-orphan"
     )
+
 
     reports = db.relationship(
         "Report",
@@ -65,8 +74,10 @@ class User(db.Model):
     )
 
 
+
 # ======================================================
-# CREDIT ACCOUNTS
+# CREDIT ACCOUNT
+# Saldo actual del cliente
 # ======================================================
 
 class CreditAccount(db.Model):
@@ -102,27 +113,23 @@ class CreditAccount(db.Model):
     updated_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
     )
-
-
-    # Relación
 
     user = db.relationship(
         "User",
         back_populates="credit_account"
     )
 
-
 # ======================================================
 # CREDIT TRANSACTIONS
+# Historial de movimientos
 # ======================================================
 
 class CreditTransaction(db.Model):
 
     __tablename__ = "credit_transactions"
-
 
     id = db.Column(
         db.UUID(as_uuid=True),
@@ -141,11 +148,17 @@ class CreditTransaction(db.Model):
     )
 
 
+    # PURCHASE
+    # REPORT_PDF
+    # PVGIS
     type = db.Column(
-        db.String,
+        db.String(50),
         nullable=False
     )
 
+
+    # positivo compra
+    # negativo consumo
 
     amount = db.Column(
         db.Integer,
@@ -156,11 +169,9 @@ class CreditTransaction(db.Model):
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc)
     )
 
-
-    # Relación
 
     user = db.relationship(
         "User",
@@ -168,8 +179,10 @@ class CreditTransaction(db.Model):
     )
 
 
+
 # ======================================================
 # REPORTS
+# Historial de PDFs generados
 # ======================================================
 
 class Report(db.Model):
@@ -195,25 +208,25 @@ class Report(db.Model):
 
 
     report_type = db.Column(
-        db.String,
+        db.String(50),
         nullable=True
     )
 
 
     filename = db.Column(
-        db.String,
+        db.String(255),
         nullable=True
     )
 
 
     anlagenname = db.Column(
-        db.String,
+        db.String(255),
         nullable=True
     )
 
 
     kwp = db.Column(
-        db.Numeric,
+        db.Numeric(10,2),
         nullable=True
     )
 
@@ -221,11 +234,9 @@ class Report(db.Model):
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc)
     )
 
-
-    # Relación
 
     user = db.relationship(
         "User",

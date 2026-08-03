@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useCredits } from "../context/CreditsContext";
 
 function ReportForm({
   buchwertData,
@@ -8,7 +10,18 @@ function ReportForm({
   pvgisData,
   finanzData
 }) {
+  
+  // =====================================================
+  // USUARIO AUTENTICADO (SUPABASE AUTH)
+  // =====================================================
+  const { user } = useAuth();
+
+  const { loadCredits } = useCredits();
+
+  console.log("AUTH USER:", user);
+
   const [name, setName] = useState("");
+
   const [adresse, setAdresse] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -60,6 +73,24 @@ function ReportForm({
 
       const pdfData = {
         document_id: documentId,
+
+        // =====================================================
+        // USUARIO AUTENTICADO / SISTEMA DE CRÉDITOS
+        // =====================================================
+        
+        user_id: user?.id || "",
+
+        user_email: user?.email || "",
+
+        user_name:
+          user?.user_metadata?.full_name ||
+          user?.user_metadata?.name ||
+          "",
+
+        company:
+          user?.user_metadata?.company ||
+          "",
+
 
         sachverstaendiger: {
           name,
@@ -156,7 +187,18 @@ function ReportForm({
         }
       };
 
-      // console.log("🔥 FINAL PDF DATA:", pdfData);
+      // =====================================================
+      // VERIFICAR USUARIO ANTES DE ENVIAR EL PDF AL BACKEND
+      // =====================================================
+
+      console.log("PDF user email:", pdfData.user_email);
+      console.log("FINAL PDF DATA:", pdfData);
+
+      if (!pdfData.user_id || !pdfData.user_email) {
+        throw new Error(
+          "Usuario Supabase no válido. Inicia sesión nuevamente."
+        );
+      }
 
       const res = await fetch(`${API_URL}/pdf`, {
         method: "POST",
@@ -178,10 +220,21 @@ function ReportForm({
 
       URL.revokeObjectURL(url);
 
+      await loadCredits();
+
 
     } catch (err) {
       console.error(err);
-      alert(`PDF Fehler: ${err.message}. Backend prüfen.`);
+      
+      if (err.message.includes("402")) {
+        alert(
+          "Keine Credits verfügbar. Bitte kaufen Sie Credits, um einen neuen PV-Bewertungsbericht zu erstellen."
+        );
+      } else {
+        alert(
+          `PDF Fehler: ${err.message}. Bitte versuchen Sie es erneut.`
+        );
+      }
     } finally {
       setLoading(false);
     }
