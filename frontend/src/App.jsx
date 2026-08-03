@@ -32,6 +32,8 @@ import MeineReports from "./components/MeineReports";
 
 import MeinProfil from "./components/MeinProfil.jsx";
 
+import Credits from "./pages/Credits.jsx";
+
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5001";
 
 
@@ -446,6 +448,11 @@ return (
         path="/profil"
         element={<MeinProfil />}
       />
+
+      <Route
+        path="/credits"
+        element={<Credits />}
+     />
 
       <Route
         path="*"
