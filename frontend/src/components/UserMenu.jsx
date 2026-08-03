@@ -32,6 +32,8 @@ function UserMenu() {
 
     const navigate = useNavigate();
 
+
+
     // Cerrar menú al hacer click fuera
 
     useEffect(() => {
@@ -61,12 +63,10 @@ function UserMenu() {
 
         return () => {
 
-
             document.removeEventListener(
                 "mousedown",
                 handleClickOutside
             );
-
 
         };
 
@@ -115,12 +115,10 @@ function UserMenu() {
 
             >
 
-
                 <i className="bi bi-person-circle fs-4"></i>
 
 
                 <span>
-
 
                     {
                         profile?.name ||
@@ -128,12 +126,10 @@ function UserMenu() {
                         "User"
                     }
 
-
                 </span>
 
 
             </button>
-
 
 
 
@@ -172,32 +168,25 @@ function UserMenu() {
 
                                 <strong>
 
-
                                     {
                                         profile?.name ||
                                         user?.email
                                     }
 
-
                                 </strong>
-
 
 
                                 <br />
 
 
-
                                 <small>
-
 
                                     {
                                         profile?.company ||
                                         "Keine Firma"
                                     }
 
-
                                 </small>
-
 
 
                             </span>
@@ -214,6 +203,9 @@ function UserMenu() {
                             <hr className="dropdown-divider"/>
 
                         </li>
+
+
+
 
 
                         <li>
@@ -233,7 +225,6 @@ function UserMenu() {
 
                             >
 
-
                                 <i className="bi bi-person"></i>
 
                                 {" "}
@@ -248,12 +239,19 @@ function UserMenu() {
 
 
 
+
+
                         <li>
 
+
                             <Link
+
                                 to="/reports"
+
                                 className="dropdown-item"
+
                                 onClick={() => setOpen(false)}
+
                             >
 
                                 <i className="bi bi-file-earmark-text"></i>
@@ -262,9 +260,13 @@ function UserMenu() {
 
                                 Meine Reports
 
+
                             </Link>
 
+
                         </li>
+
+
 
 
 
@@ -285,19 +287,58 @@ function UserMenu() {
 
                                 <strong className="ms-2">
 
+
                                     {
+
                                         loadingCredits
+
                                         ?
+
                                         "..."
+
                                         :
+
                                         credits ?? 0
+
                                     }
+
 
                                 </strong>
 
 
-
                             </span>
+
+
+                        </li>
+
+
+
+
+
+                        <li>
+
+
+                            <Link
+
+                                to="/credits"
+
+                                className="dropdown-item"
+
+                                onClick={() => setOpen(false)}
+
+                            >
+
+
+                                <i className="bi bi-cart"></i>
+
+
+                                {" "}
+
+
+                                Credits kaufen
+
+
+                            </Link>
 
 
                         </li>
@@ -342,9 +383,7 @@ function UserMenu() {
                                 Abmelden
 
 
-
                             </button>
-
 
 
                         </li>
@@ -363,7 +402,6 @@ function UserMenu() {
 
 
         </div>
-
 
     );
 
