@@ -138,31 +138,29 @@ function CreditPlans() {
     return (
 
 
-        <div className="container mt-4">
+        <div className="row g-4 justify-content-center">
 
 
-
-            <div className="row g-4">
-
-
-
-                {
-                    plans.map((plan) => (
+            {
+                plans.map((plan) => (
 
 
-                        <div
+                    <div
 
-                            className="col-12"
+                        className="col-12 col-sm-6 col-lg-3"
 
-                            key={plan.package}
+                        key={plan.package}
 
-                        >
-
-
-                            <div className="card p-4 shadow h-100">
+                    >
 
 
-                                <h5>
+                        <div className="card shadow h-100 p-3">
+
+
+                            <div className="card-body text-center">
+
+
+                                <h5 className="card-title">
 
                                     {plan.name}
 
@@ -170,7 +168,7 @@ function CreditPlans() {
 
 
 
-                                <p>
+                                <p className="card-text fs-5">
 
                                     {plan.credits} Credits
 
@@ -180,7 +178,7 @@ function CreditPlans() {
 
                                 <button
 
-                                    className="btn btn-primary"
+                                    className="btn btn-primary px-4"
 
                                     disabled={loading}
 
@@ -216,13 +214,12 @@ function CreditPlans() {
                         </div>
 
 
-                    ))
-
-                }
+                    </div>
 
 
-            </div>
+                ))
 
+            }
 
 
         </div>
