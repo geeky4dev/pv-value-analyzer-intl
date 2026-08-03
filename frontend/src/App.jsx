@@ -43,7 +43,24 @@ const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5001";
 
 function App() {
 
+  // 1. Stripe pages primero
+  const pathname = window.location.pathname;
 
+
+  if (pathname === "/payment-success") {
+
+      return <PaymentSuccess />;
+
+  }
+
+
+  if (pathname === "/payment-cancel") {
+
+      return <PaymentCancel />;
+
+  }
+
+ // 2. Después cargar aplicación normal
   const {
       user,
       profile,
