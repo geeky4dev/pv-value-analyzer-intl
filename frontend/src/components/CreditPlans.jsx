@@ -149,7 +149,7 @@ function CreditPlans() {
 
 
 
-            <div className="row g-4">
+            <div className="row g-4 border border-danger p-3">
 
 
 
@@ -159,7 +159,7 @@ function CreditPlans() {
 
                         <div
 
-                            className="col-md-6 col-lg-3"
+                            className="col-12"
 
                             key={plan.package}
 

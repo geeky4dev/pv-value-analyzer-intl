@@ -1,5 +1,6 @@
-
 import React from "react";
+
+import CreditPlans from "../components/CreditPlans";
 
 
 function Credits() {
@@ -20,87 +21,7 @@ function Credits() {
             </p>
 
 
-            <div className="row mt-4">
-
-
-                <div className="col-md-4">
-
-                    <div className="card shadow">
-
-                        <div className="card-body">
-
-                            <h5>
-                                Starter
-                            </h5>
-
-                            <p>
-                                10 Credits
-                            </p>
-
-                            <button className="btn btn-primary">
-                                Kaufen
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <div className="col-md-4">
-
-                    <div className="card shadow">
-
-                        <div className="card-body">
-
-                            <h5>
-                                Professional
-                            </h5>
-
-                            <p>
-                                25 Credits
-                            </p>
-
-                            <button className="btn btn-primary">
-                                Kaufen
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-
-                <div className="col-md-4">
-
-                    <div className="card shadow">
-
-                        <div className="card-body">
-
-                            <h5>
-                                Expert
-                            </h5>
-
-                            <p>
-                                50 Credits
-                            </p>
-
-                            <button className="btn btn-primary">
-                                Kaufen
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-            </div>
+            <CreditPlans />
 
 
         </div>
@@ -112,4 +33,3 @@ function Credits() {
 
 
 export default Credits;
-
