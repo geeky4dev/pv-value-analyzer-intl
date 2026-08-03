@@ -141,15 +141,8 @@ function CreditPlans() {
         <div className="container mt-4">
 
 
-            <h3>
 
-                Credits kaufen
-
-            </h3>
-
-
-
-            <div className="row g-4 border border-danger p-3">
+            <div className="row g-4">
 
 
 
