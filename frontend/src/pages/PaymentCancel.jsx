@@ -1,10 +1,7 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 
 
 function PaymentCancel() {
-
-    const navigate = useNavigate();
 
 
     return (
@@ -24,7 +21,10 @@ function PaymentCancel() {
 
             <button
                 className="btn btn-primary mt-3"
-                onClick={() => navigate("/")}
+                onClick={() => {
+                    console.log("BUTTON PAYMENT CANCEL CLICKED");
+                    window.location.href = "/";
+                }}
             >
                 Zurück zur Hauptseite
             </button>
