@@ -59,10 +59,10 @@ function BetriebsmodellSelector({ value, onChange }) {
             Die gesamte erzeugte Energie wird ins Netz eingespeist und gemäß EEG
             vergütet: <br></br><br></br>
             • ca. 12,22 ct/kWh (bis 10 kWp Volleinspeisung)<br></br>
-            • ca. 10,25 ct/kWh (über 10 bis 100 kWp Volleinspeisung)<br></br>
-            • ca. 10,25 ct/kWh (über 100 kWp bis 100 kWp Volleinspeisung)<br></br>
-            Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung
-
+            • ca. 10,25 ct/kWh (über 10 bis 100 kWp Volleinspeisung)<br></br><br></br>
+             Anlagen über 100 kWp:<br></br>
+            • Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung.<br></br>
+            • Die Vergütung erfolgt nicht mehr über eine klassische feste Einspeisevergütung, sondern über das Marktprämienmodell (Direktvermarktung gemäß EEG).
           </p>
         )}
         {value === "eigenverbrauch" && (

@@ -29,6 +29,9 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
     return parseFloat(String(val).replace(",", "."));
   };
 
+  const isDirektvermarktung =
+    parseEuroFloat(kwp) > 100;
+
   const formatEuro = (valor) => {
     if (valor === null || valor === undefined) return "0,00";
     return parseFloat(valor).toLocaleString('de-DE', {
@@ -130,13 +133,13 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
       const tarif = values[period];
 
       if (isVolleinspeisung) {
-        if (size <= 10) return tarif.voll10;
 
-        if (size <= 100) return tarif.voll100;
+          if (size <= 10) return tarif.voll10;
 
-        if (size <= 400) return tarif.voll400;
+          if (size <= 100) return tarif.voll100;
 
-        return tarif.voll1000;
+          // >100 kWp = Direktvermarktung
+          return null;
       }
 
       if (size <= 10) return tarif.teil10;
@@ -157,8 +160,16 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
       ? direktVerkauf() 
       : (tarifsData[period][modelKey] || 8.50);
 
-    setAutoVerguetung(autoValue);
-    setVerguetung(autoValue.toFixed(2).replace(".", ","));
+    if (autoValue !== null) {
+
+      setAutoVerguetung(autoValue);
+      setVerguetung(autoValue.toFixed(2).replace(".", ","));
+
+    } else {
+      setAutoVerguetung(null);
+      setVerguetung("0");
+    }
+
   }, [betriebsmodell, tarifsData]);
 
   useEffect(() => {
@@ -168,6 +179,14 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
   }, [restlaufzeit]);
 
   const calculateErtragswert = async () => {
+
+    if (isDirektvermarktung) {
+      alert(
+        "Anlagen über 100 kWp werden über Direktvermarktung (Marktprämienmodell) vergütet."
+      );
+      return;
+    }
+
     const k = parseEuroFloat(kwp);
     const seInput = parseEuroFloat(spezErtrag);
     const v = parseEuroFloat(verguetung);
@@ -251,7 +270,13 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
       <div className="row">
         <div className="col-md-6 mb-2">
           <label>Anlagengröße (kWp):</label>
-          <input type="text" className="form-control" value={kwp} onChange={(e) => setKwp(e.target.value)} placeholder="10" />
+          <input 
+            type="text" 
+            className="form-control" 
+            value={kwp}
+            readOnly
+            placeholder="10"
+          />
           <div className="form-text">
           Automatisch aus den Anlagendaten übernommen
           </div>
@@ -295,7 +320,23 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
       <div className="alert alert-success mb-3">
         <div className="row align-items-center">
           <div className="col-md-4"><strong>📊 Modell:</strong><br /><span className="badge bg-success fs-6 mt-1">{betriebsmodell.toUpperCase()}</span></div>
-          <div className="col-md-4"><strong>⚡ AUTO-Vergütung:</strong><br /><span className="badge bg-warning fs-6 mt-1">{formatEuro(autoVerguetung)} ct/kWh</span></div>
+          <div className="col-md-4">
+            {isDirektvermarktung ? (
+              <>
+                <strong>⚡ Vergütung:</strong><br />
+                <span className="badge bg-info fs-6 mt-1">
+                  Direktvermarktung
+                </span>
+              </>
+            ) : (
+              <>
+                <strong>⚡ AUTO-Vergütung:</strong><br />
+                <span className="badge bg-warning fs-6 mt-1">
+                  {formatEuro(autoVerguetung)} ct/kWh
+                </span>
+              </>
+            )}
+          </div>
           <div className="col-md-4"><strong>📅 EEG-Periode:</strong><br /><span className="badge bg-primary fs-6 mt-1">{eegPeriod}</span></div>
         </div>
       </div>
