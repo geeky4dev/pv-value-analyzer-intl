@@ -17,7 +17,7 @@ function Home() {
             </div>
             */}
 
-            <div className="d-flex justify-content-between align-items-center">
+            {/*<div className="d-flex justify-content-between align-items-center">
 
                 <a
                     href="https://www.apps4green.com/"
@@ -25,6 +25,23 @@ function Home() {
                 >
                     <i className="bi bi-arrow-left me-2"></i>
                     Startseite
+                </a>
+
+                <UserMenu />
+
+            </div>
+            */}
+
+            <div className="d-flex justify-content-between align-items-center">
+
+                <a
+                    href="https://www.apps4green.com/"
+                    className="btn btn-primary text-white"
+                >
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
+                    <span className="text-white">
+                        Startseite
+                    </span>
                 </a>
 
                 <UserMenu />
