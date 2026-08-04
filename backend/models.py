@@ -218,6 +218,10 @@ class Report(db.Model):
         nullable=True
     )
 
+    pdf_path = db.Column(
+        db.String,
+        nullable=True
+    )
 
     anlagenname = db.Column(
         db.String(255),

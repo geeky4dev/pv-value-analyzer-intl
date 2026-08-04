@@ -383,14 +383,14 @@ const MeineReports = () => {
                                                         report.filename
                                                         ?
 
+                                                        
                                                         <a
                                                             href={
-                                                                `${import.meta.env.VITE_BACKEND_URL}/reports/download/${report.id}`
+                                                                `${import.meta.env.VITE_BACKEND_URL}/reports/pdf/${report.id}`
                                                             }
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                         >
-
 
                                                             <i className="bi bi-file-earmark-pdf"></i>
 

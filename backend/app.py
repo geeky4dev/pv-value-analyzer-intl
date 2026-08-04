@@ -956,6 +956,7 @@ def create_report_record(
     user,
     data,
     filename
+    pdf_path
 ):
 
     """
@@ -990,6 +991,8 @@ def create_report_record(
         report_type="PDF_WERTGUTACHTEN",
 
         filename=filename,
+
+        pdf_path=pdf_path,
 
         anlagenname=(
             anlage.get("name")
@@ -2412,6 +2415,23 @@ def pdf():
         pdf_buffer.seek(0)
 
         # ======================================================
+        # SAVE PDF FILE
+        # ======================================================
+
+        pdf_filename = (
+            f"report_{uuid.uuid4().hex}.pdf"
+        )
+
+        pdf_path = os.path.join(
+            TEMP_DIR,
+            pdf_filename
+        )
+
+
+        with open(pdf_path, "wb") as f:
+            f.write(pdf_buffer.getvalue())
+
+        # ======================================================
         # SAVE CREDIT TRANSACTION + REPORT HISTORY
         # ======================================================
 
@@ -2427,6 +2447,7 @@ def pdf():
                 user=user,
                 data=data,
                 filename="PV-WERTGUTACHTEN.pdf"
+                pdf_path=pdf_path
             )
 
 
@@ -2505,13 +2526,53 @@ def get_reports(email):
         return jsonify(result), 200
 
 
+# ======================================================
+# OPEN SAVED PDF REPORT
+# ======================================================
+
+@app.route(
+    "/reports/pdf/<report_id>",
+    methods=["GET"]
+)
+def open_report_pdf(report_id):
+
+    try:
+
+        report = Report.query.filter_by(
+            id=report_id
+        ).first()
+
+
+        if not report:
+
+            return jsonify({
+                "error": "Report not found"
+            }),404
+
+
+        if not os.path.exists(report.pdf_path):
+
+            return jsonify({
+                "error": "PDF file missing"
+            }),404
+
+
+        return send_file(
+            report.pdf_path,
+            mimetype="application/pdf",
+            as_attachment=False
+        )
+
+
     except Exception as e:
 
         print(traceback.format_exc())
 
         return jsonify({
             "error": str(e)
-        }), 500
+        }),500
+
+       
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))
