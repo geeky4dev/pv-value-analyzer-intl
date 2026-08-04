@@ -10,7 +10,24 @@ function Home() {
         <div className="container mt-5">
 
 
-            <div className="d-flex justify-content-end">
+            {/*<div className="d-flex justify-content-end">
+
+                <UserMenu />
+
+            </div>
+            */}
+            
+            <div className="d-flex justify-content-between align-items-center">
+
+                <a
+                    href="/index.html"
+                    className="text-decoration-none"
+                    style={{
+                        color: "#39ff14"
+                    }}
+                >
+                    🔙 Startseite
+                </a>
 
                 <UserMenu />
 
