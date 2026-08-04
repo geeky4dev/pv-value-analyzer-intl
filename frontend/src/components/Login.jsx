@@ -1,15 +1,20 @@
+// frontend/src/components/Login.jsx
+
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 
 function Login() {
 
+
     const { signIn } = useAuth();
+
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
+
 
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
@@ -17,117 +22,203 @@ function Login() {
 
 
 
+
+
     const handleLogin = async (e) => {
+
 
         e.preventDefault();
 
+
         setError("");
+
         setMessage("");
+
         setLoading(true);
 
 
+
+
         const { data, error } = await signIn(
+
             email,
+
             password
+
         );
+
+
+
 
 
         if (error) {
 
+
             setError(error.message);
+
 
         } else {
 
-            setMessage("Login erfolgreich!");
 
-            console.log("USER:", data.user);
+            setMessage(
+                "Login erfolgreich!"
+            );
+
+
+            console.log(
+                "USER:",
+                data.user
+            );
+
 
         }
 
 
+
+
+
         setLoading(false);
+
 
     };
 
 
 
+
+
+
     return (
 
-        <div className="container">
+
+
+        <div className="container mt-5">
+
+
+
 
 
             {/* Startseite Button */}
 
-            <div className="d-flex justify-content-center mt-5 mb-3">
+
+            <div className="d-flex justify-content-center mt-4 mb-4">
+
 
                 <a
+
                     href="https://www.apps4green.com/"
+
                     className="btn btn-primary text-white"
+
                 >
+
 
                     <i className="bi bi-arrow-left me-2 text-white"></i>
 
+
                     <span className="text-white">
+
                         Startseite
+
                     </span>
 
+
                 </a>
+
+
 
             </div>
 
 
 
 
-            <div 
-                className="row justify-content-center align-items-center"
-                style={{minHeight:"80vh"}}
-            >
+
+
+
+
+
+            <div className="row justify-content-center">
+
+
+
 
 
                 <div className="col-md-5 col-lg-4">
 
 
+
+
+
                     <div className="card shadow-lg rounded-4">
+
+
+
 
 
                         <div className="card-body p-5">
 
 
+
+
+
                             <h3 className="text-center mb-4">
+
+
                                 🔐 Login
+
+
                             </h3>
+
+
+
+
+
 
 
 
                             <form onSubmit={handleLogin}>
 
 
+                                
+
 
                                 {/* Email */}
+
 
                                 <div className="mb-3">
 
 
+
                                     <label className="form-label">
+
                                         Email
+
                                     </label>
+
+
 
 
                                     <input
 
+
                                         type="email"
+
 
                                         className="form-control"
 
+
                                         value={email}
 
-                                        onChange={(e)=>
+
+                                        onChange={(e) =>
                                             setEmail(e.target.value)
                                         }
 
+
                                         placeholder="email@example.com"
 
+
                                         required
+
 
                                     />
 
@@ -138,62 +229,104 @@ function Login() {
 
 
 
+
+
+
+
                                 {/* Passwort */}
+
+
 
                                 <div className="mb-3">
 
 
+
                                     <label className="form-label">
+
 
                                         Passwort
 
+
                                     </label>
+
+
+
 
 
 
                                     <div className="input-group">
 
 
+
+
+
                                         <input
+
 
                                             type={
                                                 showPassword
-                                                ? "text"
-                                                : "password"
+                                                ?
+                                                "text"
+                                                :
+                                                "password"
                                             }
+
 
                                             className="form-control"
 
+
                                             value={password}
 
-                                            onChange={(e)=>
+
+                                            onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
 
+
                                             placeholder="********"
 
+
                                             required
+
 
                                         />
 
 
 
+
+
+
                                         <button
+
 
                                             type="button"
 
+
                                             className="btn btn-outline-secondary"
 
+
                                             onClick={() =>
-                                                setShowPassword(!showPassword)
+                                                setShowPassword(
+                                                    !showPassword
+                                                )
                                             }
+
 
                                         >
 
+
                                             {
+
                                                 showPassword
-                                                ? "🙈"
-                                                : "👁️"
+
+                                                ?
+
+                                                "🙈"
+
+                                                :
+
+                                                "👁️"
+
                                             }
 
 
@@ -201,7 +334,10 @@ function Login() {
 
 
 
+
+
                                     </div>
+
 
 
                                 </div>
@@ -210,25 +346,51 @@ function Login() {
 
 
 
+
+
+
+
                                 {/* Login Button */}
+
+
 
                                 <button
 
+
                                     type="submit"
+
 
                                     className="btn btn-primary w-100"
 
+
                                     disabled={loading}
+
 
                                 >
 
+
+
                                     {
+
                                         loading
-                                        ? "Anmelden..."
-                                        : "Einloggen"
+
+                                        ?
+
+                                        "Anmelden..."
+
+                                        :
+
+                                        "Einloggen"
+
+
                                     }
 
+
+
                                 </button>
+
+
+
 
 
 
@@ -238,49 +400,93 @@ function Login() {
 
 
 
-                            {error &&
+
+
+
+
+                            {
+
+                                error &&
+
+
 
                                 <div className="alert alert-danger mt-3">
 
+
                                     {error}
 
+
                                 </div>
+
+
 
                             }
 
 
 
 
-                            {message &&
+
+
+
+
+
+                            {
+
+                                message &&
+
+
 
                                 <div className="alert alert-success mt-3">
 
+
                                     {message}
+
 
                                 </div>
 
+
+
                             }
+
+
+
+
+
+
 
 
 
                         </div>
 
 
+
                     </div>
+
+
+
 
 
                 </div>
 
 
+
+
+
             </div>
+
+
+
 
 
         </div>
 
 
+
     );
 
+
 }
+
 
 
 export default Login;
