@@ -509,11 +509,28 @@ return (
 
           <>
 
-            <div className="container mt-3 d-flex justify-content-end">
+            {/*<div className="container mt-3 d-flex justify-content-end">
 
               <UserMenu />
 
-            </div>
+            </div>*/}
+
+            <div className="container mt-3 d-flex justify-content-between align-items-center">
+
+              <a
+                  href="/"
+                  className="btn btn-primary text-white"
+              >
+                  <i className="bi bi-arrow-left me-2 text-white"></i>
+                  <span className="text-white">
+                      Startseite
+                  </span>
+              </a>
+
+
+              <UserMenu />
+
+          </div>
 
 
             <div className="container mt-3 no-print text-center">
