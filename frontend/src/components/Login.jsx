@@ -9,6 +9,8 @@ function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    const [showPassword, setShowPassword] = useState(false);
+
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
@@ -54,24 +56,26 @@ function Login() {
         <div className="container">
 
 
-           
-        {/* Startseite Button */}
-        <div className="d-flex justify-content-center mt-5 mb-3">
+            {/* Startseite Button */}
 
-            <a
-                href="https://www.apps4green.com/"
-                className="btn btn-primary text-white"
-            >
+            <div className="d-flex justify-content-center mt-5 mb-3">
 
-                <i className="bi bi-arrow-left me-2 text-white"></i>
+                <a
+                    href="https://www.apps4green.com/"
+                    className="btn btn-primary text-white"
+                >
 
-                <span className="text-white">
-                    Startseite
-                </span>
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
 
-            </a>
+                    <span className="text-white">
+                        Startseite
+                    </span>
 
-        </div>
+                </a>
+
+            </div>
+
+
 
 
             <div 
@@ -97,6 +101,9 @@ function Login() {
 
                             <form onSubmit={handleLogin}>
 
+
+
+                                {/* Email */}
 
                                 <div className="mb-3">
 
@@ -131,6 +138,8 @@ function Login() {
 
 
 
+                                {/* Passwort */}
+
                                 <div className="mb-3">
 
 
@@ -141,23 +150,58 @@ function Login() {
                                     </label>
 
 
-                                    <input
 
-                                        type="password"
+                                    <div className="input-group">
 
-                                        className="form-control"
 
-                                        value={password}
+                                        <input
 
-                                        onChange={(e)=>
-                                            setPassword(e.target.value)
-                                        }
+                                            type={
+                                                showPassword
+                                                ? "text"
+                                                : "password"
+                                            }
 
-                                        placeholder="********"
+                                            className="form-control"
 
-                                        required
+                                            value={password}
 
-                                    />
+                                            onChange={(e)=>
+                                                setPassword(e.target.value)
+                                            }
+
+                                            placeholder="********"
+
+                                            required
+
+                                        />
+
+
+
+                                        <button
+
+                                            type="button"
+
+                                            className="btn btn-outline-secondary"
+
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+
+                                        >
+
+                                            {
+                                                showPassword
+                                                ? "🙈"
+                                                : "👁️"
+                                            }
+
+
+                                        </button>
+
+
+
+                                    </div>
 
 
                                 </div>
@@ -165,6 +209,8 @@ function Login() {
 
 
 
+
+                                {/* Login Button */}
 
                                 <button
 
