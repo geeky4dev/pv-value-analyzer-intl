@@ -14,7 +14,7 @@ function PaymentCancel() {
             <div className="d-flex justify-content-center mt-5 mb-4">
 
                 <a
-                    href="https://www.apps4green.com/"
+                    href="/"
                     className="btn btn-primary text-white"
                 >
 
