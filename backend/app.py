@@ -955,7 +955,7 @@ def test_db():
 def create_report_record(
     user,
     data,
-    filename
+    filename,
     pdf_path
 ):
 
