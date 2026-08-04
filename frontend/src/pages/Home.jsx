@@ -23,7 +23,8 @@ function Home() {
                     href="https://www.apps4green.com/"
                     className="btn btn-primary"
                 >
-                    🔙 Startseite
+                    <i className="bi bi-arrow-left me-2"></i>
+                    Startseite
                 </a>
 
                 <UserMenu />
