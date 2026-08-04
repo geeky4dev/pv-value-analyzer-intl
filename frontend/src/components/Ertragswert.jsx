@@ -62,9 +62,9 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
     });
 
     return {
-      h1: getTarifSet(12.35, 10.35, 7.78, 6.74, 5.50, 2.56, 2.38, 2.38, 1.60),
-      h2: getTarifSet(12.22, 10.25, 7.70, 6.66, 5.43, 2.51, 2.35, 2.35, 1.58),
-      h3: getTarifSet(12.10, 10.15, 7.63, 6.60, 5.37, 2.49, 2.33, 2.33, 1.57),
+      h1: getTarifSet(12.34, 10.35, 7.78, 6.73, 5.50, 2.56, 2.38, 2.38, 1.60),
+      h2: getTarifSet(12.22, 10.25, 7.70, 6.66, 5.45, 2.51, 2.35, 2.35, 1.58),
+      h3: getTarifSet(12.09, 10.14, 7.63, 6.60, 5.39, 2.49, 2.33, 2.33, 1.56),
       isVolleinspeisung,
       size
     };
