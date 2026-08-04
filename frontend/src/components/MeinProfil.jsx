@@ -4,13 +4,10 @@ import { Card } from "react-bootstrap";
 import { useAuth } from "../context/AuthContext";
 import { useCredits } from "../context/CreditsContext";
 
-import { useNavigate } from "react-router-dom";
 
 
 const MeinProfil = () => {
 
-
-    const navigate = useNavigate();
 
 
     const {
@@ -28,32 +25,39 @@ const MeinProfil = () => {
 
 
 
+
     return (
+
 
         <div className="container mt-4">
 
 
-            {/* Zurück Button */}
 
-            <div className="mb-3">
+            {/* Startseite Button */}
+
+            <div className="d-flex justify-content-end mb-4">
 
 
-                <button
+                <a
 
-                    className="btn btn-secondary"
+                    href="https://www.apps4green.com/"
 
-                    onClick={() => navigate("/")}
+                    className="btn btn-primary text-white"
 
                 >
 
-                    <i className="bi bi-arrow-left"></i>
-
-                    {" "}
-
-                    Zurück zur Hauptseite
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
 
 
-                </button>
+                    <span className="text-white">
+
+                        Startseite
+
+                    </span>
+
+
+                </a>
+
 
 
             </div>
@@ -62,23 +66,30 @@ const MeinProfil = () => {
 
 
 
+
             <Card className="shadow-sm">
+
 
 
                 <Card.Body>
 
 
 
+
                     <Card.Title className="mb-4">
 
+
                         👤 Mein Profil
+
 
                     </Card.Title>
 
 
 
 
+
                     <hr />
+
 
 
 
@@ -96,6 +107,7 @@ const MeinProfil = () => {
 
 
 
+
                     <p>
 
                         <strong>Name:</strong>
@@ -104,7 +116,9 @@ const MeinProfil = () => {
 
                         {profile?.name || "-"}
 
+
                     </p>
+
 
 
 
@@ -117,7 +131,9 @@ const MeinProfil = () => {
 
                         {user?.email || "-"}
 
+
                     </p>
+
 
 
 
@@ -129,6 +145,7 @@ const MeinProfil = () => {
                         {" "}
 
                         {profile?.company || "-"}
+
 
                     </p>
 
@@ -166,6 +183,7 @@ const MeinProfil = () => {
 
                         {
 
+
                             profile?.created_at
 
                             ?
@@ -180,10 +198,13 @@ const MeinProfil = () => {
 
                             "-"
 
+
                         }
 
 
                     </p>
+
+
 
 
 
@@ -196,6 +217,7 @@ const MeinProfil = () => {
 
                         {
 
+
                             profile?.current_plan
 
                             ?
@@ -206,9 +228,12 @@ const MeinProfil = () => {
 
                             "-"
 
+
                         }
 
+
                     </p>
+
 
 
 
@@ -253,6 +278,7 @@ const MeinProfil = () => {
 
                         {
 
+
                             loadingCredits
 
                             ?
@@ -262,6 +288,7 @@ const MeinProfil = () => {
                             :
 
                             credits ?? 0
+
 
                         }
 

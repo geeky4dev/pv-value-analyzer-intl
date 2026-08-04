@@ -9,25 +9,42 @@ function PaymentCancel() {
         <div className="container mt-5 text-center">
 
 
+            {/* Startseite Button */}
+
+            <div className="d-flex justify-content-center mt-5 mb-4">
+
+                <a
+                    href="https://www.apps4green.com/"
+                    className="btn btn-primary text-white"
+                >
+
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
+
+                    <span className="text-white">
+                        Startseite
+                    </span>
+
+                </a>
+
+            </div>
+
+
+
+
             <h2 className="text-warning">
+
                 ⚠️ Zahlung abgebrochen
+
             </h2>
 
 
+
             <p className="mt-3">
+
                 Der Kauf wurde nicht abgeschlossen.
+
             </p>
 
-
-            <button
-                className="btn btn-primary mt-3"
-                onClick={() => {
-                    console.log("BUTTON PAYMENT CANCEL CLICKED");
-                    window.location.href = "/";
-                }}
-            >
-                Zurück zur Hauptseite
-            </button>
 
 
         </div>

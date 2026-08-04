@@ -9,11 +9,35 @@ function PaymentSuccess() {
         <div className="container mt-5 text-center">
 
 
+            {/* Startseite Button */}
+
+            <div className="d-flex justify-content-center mt-5 mb-4">
+
+                <a
+                    href="https://www.apps4green.com/"
+                    className="btn btn-primary text-white"
+                >
+
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
+
+                    <span className="text-white">
+                        Startseite
+                    </span>
+
+                </a>
+
+            </div>
+
+
+
+
             <h2 className="text-success">
 
                 ✅ Zahlung erfolgreich
 
             </h2>
+
+
 
 
             <p className="mt-3">
@@ -23,25 +47,14 @@ function PaymentSuccess() {
             </p>
 
 
+
+
             <p className="text-muted">
 
                 Ihre Credits wurden Ihrem Konto gutgeschrieben.
 
             </p>
 
-
-
-            <button
-
-                className="btn btn-primary mt-3"
-
-                onClick={() => window.location.href = "/"}
-
-            >
-
-                Zurück zur Hauptseite
-
-            </button>
 
 
         </div>

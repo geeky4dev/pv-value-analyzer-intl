@@ -1,7 +1,5 @@
 import React from "react";
 
-import { Link } from "react-router-dom";
-
 import CreditPlans from "../components/CreditPlans";
 
 
@@ -13,7 +11,10 @@ function Credits() {
         <div className="container mt-4">
 
 
+            {/* Header */}
+
             <div className="d-flex justify-content-between align-items-center mb-4">
+
 
 
                 <div>
@@ -27,32 +28,42 @@ function Credits() {
                         Wählen Sie Ihr Credit-Paket.
                     </p>
 
+
                 </div>
 
 
 
-                <Link
 
-                    to="/"
 
-                    className="btn btn-outline-secondary"
+                {/* Startseite Button */}
+
+                <a
+
+                    href="/"
+
+                    className="btn btn-primary text-white"
 
                 >
 
-                    <i className="bi bi-arrow-left"></i>
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
 
-                    {" "}
 
-                    Zurück zur Hauptseite
+                    <span className="text-white">
+                        Startseite
+                    </span>
 
-                </Link>
+
+                </a>
+
 
 
             </div>
 
 
 
+
             <CreditPlans />
+
 
 
         </div>
