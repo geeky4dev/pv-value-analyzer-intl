@@ -59,10 +59,10 @@ function BetriebsmodellSelector({ value, onChange }) {
             Die gesamte erzeugte Energie wird ins Netz eingespeist und gemäß EEG
             vergütet: <br></br><br></br>
             • ca. 12,22 ct/kWh (bis 10 kWp Volleinspeisung)<br></br>
-            • ca. 10,25 ct/kWh (über 10 bis 100 kWp Volleinspeisung)<br></br><br></br>
-            Anlagen über 100 kWp:<br></br>
-            • Ab mehr als 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung.<br></br> 
-            • Die Vergütung erfolgt nicht mehr über eine klassische feste Einspeisevergütung, sondern über das Marktprämienmodell (Direktvermarktung gemäß EEG).
+            • ca. 10,25 ct/kWh (über 10 bis 100 kWp Volleinspeisung)<br></br>
+            • ca. 10,25 ct/kWh (über 100 kWp bis 100 kWp Volleinspeisung)<br></br>
+            Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung
+
           </p>
         )}
         {value === "eigenverbrauch" && (
@@ -72,8 +72,7 @@ function BetriebsmodellSelector({ value, onChange }) {
             • ca. 7,70 ct/kWh (bis 10 kW Teileinspeisung) / 12,22 ct/kWh (Volleinspeisung)<br></br> 
             • 6,66 ct/kWh (bis 40 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br> 
             • 5,45 ct/kWh (bis 100 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br><br></br>  
-            Anlagen über 100 kWp:<br></br>
-            • Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung<br></br> 
+            Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung<br></br> 
           </p>
         )}
         {value === "eigenverbrauch_batterie" && (
@@ -84,9 +83,8 @@ function BetriebsmodellSelector({ value, onChange }) {
             Einspeisung wird gemäß EEG vergütet:<br></br> 
             • ca. 7,70 ct/kWh (bis 10 kW Teileinspeisung) / 12,22 ct/kWh (Volleinspeisung)<br></br> 
             • 6,66 ct/kWh (bis 40 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br> 
-            • 5,45 ct/kWh (bis 100 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br><br></br> 
-            Anlagen über 100 kWp:<br></br>
-            • Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung<br></br> 
+            • 5,45 ct/kWh (bis 100 kW Teileinspeisung) / 10,25 ct/kWh (Volleinspeisung)<br></br><br></br>  
+            Ab 100 kWp zur „Direktvermarktung“ verpflichtet, keine feste Vergütung<br></br> 
           </p>
         )}
         {value === "mieterstrom" && (
