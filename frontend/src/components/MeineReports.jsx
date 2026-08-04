@@ -194,14 +194,18 @@ const MeineReports = () => {
 
                 <div className="mb-3">
 
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => navigate("/")}
+                    <a
+                        href="/"
+                        className="btn btn-primary text-white"
                     >
-                        <i className="bi bi-arrow-left"></i>
-                        {" "}
-                        Zurück zum Hauptmenü
-                    </button>
+
+                        <i className="bi bi-arrow-left me-2 text-white"></i>
+
+                        <span className="text-white">
+                            Startseite
+                        </span>
+
+                    </a>
 
                 </div>
 

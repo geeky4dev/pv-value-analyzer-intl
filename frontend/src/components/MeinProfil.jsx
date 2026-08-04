@@ -40,7 +40,7 @@ const MeinProfil = () => {
 
                 <a
 
-                    href="https://www.apps4green.com/"
+                    href="/"
 
                     className="btn btn-primary text-white"
 
