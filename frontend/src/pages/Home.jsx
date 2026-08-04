@@ -16,15 +16,12 @@ function Home() {
 
             </div>
             */}
-            
+
             <div className="d-flex justify-content-between align-items-center">
 
                 <a
-                    href="/index.html"
-                    className="text-decoration-none"
-                    style={{
-                        color: "#39ff14"
-                    }}
+                    href="https://www.apps4green.com/"
+                    className="btn btn-primary"
                 >
                     🔙 Startseite
                 </a>
