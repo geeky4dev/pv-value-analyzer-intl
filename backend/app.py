@@ -2446,7 +2446,7 @@ def pdf():
             create_report_record(
                 user=user,
                 data=data,
-                filename="PV-WERTGUTACHTEN.pdf"
+                filename="PV-WERTGUTACHTEN.pdf",
                 pdf_path=pdf_path
             )
 
@@ -2524,6 +2524,15 @@ def get_reports(email):
 
 
         return jsonify(result), 200
+
+
+    except Exception as e:
+
+        print(traceback.format_exc())
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 # ======================================================
