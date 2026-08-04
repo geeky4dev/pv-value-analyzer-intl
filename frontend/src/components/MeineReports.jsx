@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Table, Spinner, Alert, Card } from "react-bootstrap";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 
 const MeineReports = () => {
 
     const { user } = useAuth();
-
-    const navigate = useNavigate();
 
     const [reports, setReports] = useState([]);
 
@@ -36,6 +34,7 @@ const MeineReports = () => {
 
             try {
 
+                setError("");
 
                 const backendURL =
                     import.meta.env.VITE_BACKEND_URL;
@@ -194,8 +193,9 @@ const MeineReports = () => {
 
                 <div className="mb-3">
 
-                    <a
-                        href="/"
+
+                    <Link
+                        to="/"
                         className="btn btn-primary text-white"
                     >
 
@@ -205,7 +205,7 @@ const MeineReports = () => {
                             Startseite
                         </span>
 
-                    </a>
+                    </Link>
 
                 </div>
 
@@ -343,9 +343,9 @@ const MeineReports = () => {
 
                                                 <td>
 
-
                                                     {
-                                                        report.kwp
+                                                        report.kwp !== null &&
+                                                        report.kwp !== undefined
                                                         ?
                                                         `${report.kwp} kWp`
                                                         :
@@ -390,6 +390,7 @@ const MeineReports = () => {
                                                             }
                                                             target="_blank"
                                                             rel="noopener noreferrer"
+                                                            className="text-decoration-none"
                                                         >
 
                                                             <i className="bi bi-file-earmark-pdf"></i>
