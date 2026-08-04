@@ -54,25 +54,24 @@ function Login() {
         <div className="container">
 
 
-            {/* Startseite Button */}
-            <div className="d-flex justify-content-center mt-5">
+           
+        {/* Startseite Button */}
+        <div className="d-flex justify-content-center mt-5 mb-3">
 
-                <a
-                    href="https://www.apps4green.com/"
-                    className="btn btn-primary text-white"
-                >
+            <a
+                href="https://www.apps4green.com/"
+                className="btn btn-primary text-white"
+            >
 
-                    <i className="bi bi-arrow-left me-2 text-white"></i>
+                <i className="bi bi-arrow-left me-2 text-white"></i>
 
-                    <span className="text-white">
-                        Startseite
-                    </span>
+                <span className="text-white">
+                    Startseite
+                </span>
 
-                </a>
+            </a>
 
-            </div>
-
-
+        </div>
 
 
             <div 
