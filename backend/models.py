@@ -189,7 +189,6 @@ class Report(db.Model):
 
     __tablename__ = "reports"
 
-
     id = db.Column(
         db.UUID(as_uuid=True),
         primary_key=True,
