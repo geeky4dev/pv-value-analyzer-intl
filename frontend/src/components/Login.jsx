@@ -53,8 +53,32 @@ function Login() {
 
         <div className="container">
 
-            <div className="row justify-content-center align-items-center"
-                 style={{minHeight:"80vh"}}>
+
+            {/* Startseite Button */}
+            <div className="d-flex justify-content-start mt-3">
+
+                <a
+                    href="https://www.apps4green.com/"
+                    className="btn btn-primary text-white"
+                >
+
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
+
+                    <span className="text-white">
+                        Startseite
+                    </span>
+
+                </a>
+
+            </div>
+
+
+
+
+            <div 
+                className="row justify-content-center align-items-center"
+                style={{minHeight:"80vh"}}
+            >
 
 
                 <div className="col-md-5 col-lg-4">
@@ -76,6 +100,7 @@ function Login() {
 
 
                                 <div className="mb-3">
+
 
                                     <label className="form-label">
                                         Email
@@ -102,6 +127,7 @@ function Login() {
 
 
                                 </div>
+
 
 
 
@@ -140,6 +166,7 @@ function Login() {
 
 
 
+
                                 <button
 
                                     type="submit"
@@ -151,9 +178,9 @@ function Login() {
                                 >
 
                                     {
-                                    loading
-                                    ? "Anmelden..."
-                                    : "Einloggen"
+                                        loading
+                                        ? "Anmelden..."
+                                        : "Einloggen"
                                     }
 
                                 </button>
@@ -161,6 +188,7 @@ function Login() {
 
 
                             </form>
+
 
 
 
@@ -174,6 +202,7 @@ function Login() {
                                 </div>
 
                             }
+
 
 
 
