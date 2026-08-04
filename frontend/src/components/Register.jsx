@@ -19,8 +19,10 @@ function Register() {
     const [confirmPassword, setConfirmPassword] = useState("");
 
 
+
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
 
     const [loading, setLoading] = useState(false);
@@ -47,9 +49,6 @@ function Register() {
 
 
 
-
-        // Passwort prüfen
-
         if (password !== confirmPassword) {
 
 
@@ -62,8 +61,8 @@ function Register() {
 
             return;
 
-        }
 
+        }
 
 
 
@@ -72,8 +71,7 @@ function Register() {
         try {
 
 
-
-            // Usuario en Supabase Auth
+            // Crear usuario en Supabase Auth
 
             const { data, error } = await signUp(
 
@@ -104,8 +102,7 @@ function Register() {
 
 
 
-
-            // Crear perfil
+            // Crear perfil en tabla profiles
 
             if (data.user) {
 
@@ -132,7 +129,6 @@ function Register() {
 
 
 
-
                 if (profileError) {
 
 
@@ -147,8 +143,6 @@ function Register() {
 
 
             }
-
-
 
 
 
@@ -177,7 +171,6 @@ function Register() {
 
 
 
-
         } catch (err) {
 
 
@@ -193,8 +186,8 @@ function Register() {
         setLoading(false);
 
 
-    };
 
+    };
 
 
 
@@ -211,14 +204,53 @@ function Register() {
 
 
 
+            {/* Startseite Button */}
+
+
+            <div className="d-flex justify-content-center mt-4 mb-4">
+
+
+
+                <a
+
+                    href="https://www.apps4green.com/"
+
+                    className="btn btn-primary text-white"
+
+                >
+
+
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
+
+
+                    <span className="text-white">
+
+                        Startseite
+
+                    </span>
+
+
+                </a>
+
+
+
+            </div>
+
+
+
+
+
+
+
+
+
             <div className="row justify-content-center">
 
 
 
 
 
-                <div className="col-md-6">
-
+                <div className="col-md-6 col-lg-5">
 
 
 
@@ -230,9 +262,7 @@ function Register() {
 
 
 
-
                         <div className="card-body p-4">
-
 
 
 
@@ -251,11 +281,12 @@ function Register() {
 
 
 
+
+
                             <form onSubmit={handleRegister}>
 
 
-
-
+                                
 
 
 
@@ -267,7 +298,6 @@ function Register() {
                                         Name
 
                                     </label>
-
 
 
                                     <input
@@ -287,9 +317,7 @@ function Register() {
                                     />
 
 
-
                                 </div>
-
 
 
 
@@ -308,8 +336,6 @@ function Register() {
                                     </label>
 
 
-
-
                                     <input
 
                                         type="text"
@@ -323,7 +349,6 @@ function Register() {
                                         }
 
                                     />
-
 
 
                                 </div>
@@ -346,9 +371,6 @@ function Register() {
                                     </label>
 
 
-
-
-
                                     <input
 
                                         type="email"
@@ -366,7 +388,6 @@ function Register() {
                                     />
 
 
-
                                 </div>
 
 
@@ -374,10 +395,6 @@ function Register() {
 
 
 
-
-
-
-                                {/* Passwort */}
 
 
 
@@ -394,17 +411,17 @@ function Register() {
 
 
 
-
                                     <div className="input-group">
-
 
 
                                         <input
 
                                             type={
                                                 showPassword
-                                                ? "text"
-                                                : "password"
+                                                ?
+                                                "text"
+                                                :
+                                                "password"
                                             }
 
                                             className="form-control"
@@ -428,19 +445,18 @@ function Register() {
                                             className="btn btn-outline-secondary"
 
                                             onClick={() =>
-                                                setShowPassword(
-                                                    !showPassword
-                                                )
+                                                setShowPassword(!showPassword)
                                             }
 
                                         >
+
 
                                             {
                                                 showPassword
                                                 ?
                                                 "🙈"
                                                 :
-                                                "👁️"
+                                                "👁"
                                             }
 
 
@@ -457,12 +473,6 @@ function Register() {
 
 
 
-
-
-
-
-
-                                {/* Passwort wiederholen */}
 
 
 
@@ -490,8 +500,10 @@ function Register() {
 
                                             type={
                                                 showConfirmPassword
-                                                ? "text"
-                                                : "password"
+                                                ?
+                                                "text"
+                                                :
+                                                "password"
                                             }
 
                                             className="form-control"
@@ -499,15 +511,12 @@ function Register() {
                                             value={confirmPassword}
 
                                             onChange={(e)=>
-                                                setConfirmPassword(
-                                                    e.target.value
-                                                )
+                                                setConfirmPassword(e.target.value)
                                             }
 
                                             required
 
                                         />
-
 
 
 
@@ -519,9 +528,7 @@ function Register() {
                                             className="btn btn-outline-secondary"
 
                                             onClick={() =>
-                                                setShowConfirmPassword(
-                                                    !showConfirmPassword
-                                                )
+                                                setShowConfirmPassword(!showConfirmPassword)
                                             }
 
                                         >
@@ -532,9 +539,8 @@ function Register() {
                                                 ?
                                                 "🙈"
                                                 :
-                                                "👁️"
+                                                "👁"
                                             }
-
 
 
                                         </button>
@@ -577,12 +583,12 @@ function Register() {
 
                                         "Registrieren"
 
+
                                     }
 
 
 
                                 </button>
-
 
 
 
@@ -601,8 +607,8 @@ function Register() {
 
                             {
 
-                                error && (
 
+                                error && (
 
 
                                     <div className="alert alert-danger mt-3">
@@ -614,8 +620,8 @@ function Register() {
                                     </div>
 
 
-
                                 )
+
 
                             }
 
@@ -629,8 +635,8 @@ function Register() {
 
                             {
 
-                                message && (
 
+                                message && (
 
 
                                     <div className="alert alert-success mt-3">
@@ -642,10 +648,11 @@ function Register() {
                                     </div>
 
 
-
                                 )
 
+
                             }
+
 
 
 
@@ -657,11 +664,7 @@ function Register() {
 
 
 
-
-
-
                     </div>
-
 
 
 
@@ -673,9 +676,7 @@ function Register() {
 
 
 
-
             </div>
-
 
 
 
@@ -685,13 +686,7 @@ function Register() {
 
 
 
-
-
-
     );
-
-
-
 
 
 }
