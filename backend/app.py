@@ -982,7 +982,11 @@ def create_report_record(
     else:
         kwp_value = float(kwp_value)
 
-
+    print("============================")
+    print("DEBUG create_report_record")
+    print("filename:", filename)
+    print("pdf_path recibido:", pdf_path)
+    print("============================")
 
     report = Report(
 
@@ -1003,6 +1007,10 @@ def create_report_record(
         kwp=kwp_value
     )
 
+    print("============================")
+    print("DEBUG objeto Report")
+    print("report.pdf_path:", report.pdf_path)
+    print("============================")
 
     db.session.add(report)
 
@@ -2442,6 +2450,13 @@ def pdf():
                 "PDF_WERTGUTACHTEN"
             )
 
+            print("==============================")
+            print("DEBUG PDF")
+            print("TEMP_DIR:", TEMP_DIR)
+            print("pdf_path:", pdf_path)
+            print("exists:", os.path.exists(pdf_path))
+            print("==============================")
+
 
             create_report_record(
                 user=user,
@@ -2558,12 +2573,18 @@ def open_report_pdf(report_id):
                 "error": "Report not found"
             }),404
 
+        if not report.pdf_path:
+
+            return jsonify({
+                "error": "PDF path not stored"
+            }),404
+
 
         if not os.path.exists(report.pdf_path):
 
             return jsonify({
                 "error": "PDF file missing"
-            }),404
+            }),404     
 
 
         return send_file(

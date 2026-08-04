@@ -37,6 +37,10 @@ backend/.env.production
 backend/pdfs/
 backend/uploads/
 backend/logo_tmp/
+backend/temp/
+
+# Generated PDF files
+*.pdf
 
 # -------------------- IDE / OS --------------------
 .vscode/
