@@ -30,7 +30,12 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
   };
 
   const isDirektvermarktung =
-    parseEuroFloat(kwp) > 100;
+    parseEuroFloat(kwp) > 100 &&
+    (
+      betriebsmodell === "volleinspeisung" ||
+      betriebsmodell === "eigenverbrauch" ||
+      betriebsmodell === "eigenverbrauch_batterie"
+    );  
 
   const formatEuro = (valor) => {
     if (valor === null || valor === undefined) return "0,00";
@@ -132,14 +137,18 @@ function Ertragswert({ onResult, betriebsmodell, pvgisProduction, anlagengroesse
 
       const tarif = values[period];
 
+
       if (isVolleinspeisung) {
 
           if (size <= 10) return tarif.voll10;
 
           if (size <= 100) return tarif.voll100;
 
-          // >100 kWp = Direktvermarktung
-          return null;
+          if (size <= 400) return tarif.voll400;
+
+          if (size <= 1000) return tarif.voll1000;
+
+          return null; // >1000 kWp Sonderfall
       }
 
       if (size <= 10) return tarif.teil10;
