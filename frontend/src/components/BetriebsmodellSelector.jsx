@@ -56,42 +56,50 @@ function BetriebsmodellSelector({ value, onChange }) {
       <div className="alert alert-success mt-3">
         {value === "volleinspeisung" && (
           <p>
-          Die gesamte erzeugte Energie wird vollständig in das öffentliche Netz eingespeist 
-          und gemäß EEG vergütet.<br /><br />
+            Die gesamte erzeugte Energie wird vollständig in das öffentliche Netz eingespeist 
+            und gemäß EEG vergütet.<br /><br />
+            <strong>Einspeisevergütung gemäß EEG:</strong><br />
+            • ca. 12,22 ct/kWh (bis 10 kWp Volleinspeisung)<br />
+            • ca. 10,25 ct/kWh (über 10 bis 100 kWp Volleinspeisung)<br /><br />
 
-          • ca. 12,22 ct/kWh (bis 10 kWp Volleinspeisung)<br />
-          • ca. 10,25 ct/kWh (über 10 bis 100 kWp Volleinspeisung)<br /><br />
+            ⚠️ <strong>Achtung!</strong> Die EEG-Vergütung wird gestaffelt nach Leistungsanteilen berechnet.
+            Eine PV-Anlage erhält daher nicht automatisch den Vergütungssatz der letzten Leistungsstufe 
+            für die gesamte Anlagenleistung.<br /><br />
 
-          ⚠️ <strong>Achtung!</strong> Die EEG-Vergütung wird gestaffelt nach Leistungsanteilen berechnet.
-          Eine PV-Anlage erhält daher nicht automatisch den Vergütungssatz der letzten Leistungsstufe 
-          für die gesamte Anlagenleistung.<br /><br />
+            <strong>Beispiel (50 kWp-Volleinspeisungsanlage):</strong><br />
 
-          <strong>Beispiel (50 kWp-Volleinspeisungsanlage):</strong><br />
-          Eine 50 kWp-Anlage erhält nicht automatisch 10,25 ct/kWh für die gesamte Strommenge.<br /><br />
+            Eine 50 kWp-Anlage erhält nicht automatisch 10,25 ct/kWh für die gesamte Strommenge.
+            Die Vergütung wird entsprechend den einzelnen Leistungsstufen berechnet:<br /><br />
 
-          Die Vergütung wird entsprechend den einzelnen Leistungsstufen berechnet:<br /><br />
+            • Die ersten 10 kWp werden mit ca. 12,22 ct/kWh vergütet.<br />
+            • Die verbleibenden 40 kWp (über 10 bis 100 kWp) werden mit ca. 10,25 ct/kWh vergütet.<br /><br />
 
-          • Die ersten 10 kWp werden mit ca. 12,22 ct/kWh vergütet.<br />
-          • Die verbleibenden 40 kWp (über 10 bis 100 kWp) werden mit ca. 10,25 ct/kWh vergütet.<br /><br />
+            Der effektive Vergütungssatz ergibt sich somit aus der gewichteten Berechnung 
+            der einzelnen Leistungsanteile.<br /><br />
 
-          Der effektive Vergütungssatz ergibt sich somit aus der gewichteten Berechnung 
-          der einzelnen Leistungsanteile.<br /><br />
+            <strong>Beispielhafte Ertragsberechnung (50 kWp-Anlage):</strong><br />
 
-          <strong>Wirtschaftlicher Nutzen:</strong><br />
-          Einnahmen aus Einspeisung = PV-Produktion × EEG-Einspeisevergütung<br /><br />
+            • Jahresproduktion: ca. 50.000 kWh/Jahr<br />
+            • Einspeisung: 50.000 kWh × gestaffelte EEG-Vergütung 
+            (Ø ca. 10,64 ct/kWh) ≈ 5.320 €/Jahr<br /><br />
 
-          <strong>Anlagen über 100 kWp:</strong><br />
-          • Bei Solaranlagen mit mehr als 100 kWp installierter Leistung ist grundsätzlich 
-          die Direktvermarktung erforderlich.<br />
-          • Die EEG-Förderung erfolgt in der Regel über das Marktprämienmodell; 
-          eine klassische feste Einspeisevergütung wird nicht automatisch gewährt.
-        </p>
+            → wirtschaftlicher Nutzen ≈ 5.320 €/Jahr<br /><br />
+
+            <strong>Wirtschaftlicher Nutzen:</strong><br />
+            Einnahmen aus Einspeisung = PV-Produktion × EEG-Einspeisevergütung<br /><br />
+
+            <strong>Anlagen über 100 kWp:</strong><br />
+            • Bei Solaranlagen mit mehr als 100 kWp installierter Leistung ist grundsätzlich 
+            die Direktvermarktung erforderlich.<br />
+            • Die EEG-Förderung erfolgt in der Regel über das Marktprämienmodell; 
+            eine klassische feste Einspeisevergütung wird nicht automatisch gewährt.
+          </p>
         )}
         {value === "eigenverbrauch" && (
           <p>
           Ein Teil des Solarstroms wird direkt selbst verbraucht, der überschüssige Strom wird in das öffentliche Netz eingespeist.<br /><br />
 
-          <strong>Einspeisevergütung gemäß EEG (Teileinspeisung, Inbetriebnahme 01.08.2026–31.01.2027):</strong><br />
+          <strong>Die Netzeinspeisung wird gemäß EEG vergütet:</strong><br />
           • ca. 7,70 ct/kWh (bis 10 kWp Teileinspeisung)<br />
           • ca. 6,66 ct/kWh (über 10 bis 40 kWp Teileinspeisung)<br />
           • ca. 5,45 ct/kWh (über 40 bis 100 kWp Teileinspeisung)<br /><br />
@@ -123,7 +131,7 @@ function BetriebsmodellSelector({ value, onChange }) {
               die Stromkosteneinsparung gesteigert werden. Ein Teil des Solarstroms wird selbst 
               verbraucht, der überschüssige Strom wird in das öffentliche Netz eingespeist.<br /><br />
 
-              Die Netzeinspeisung wird gemäß EEG vergütet:<br />
+              <strong>Die Netzeinspeisung wird gemäß EEG vergütet:</strong><br />
               • ca. 7,70 ct/kWh (bis 10 kWp Leistungsanteil, Teileinspeisung).<br />
               • ca. 6,66 ct/kWh (über 10 bis 40 kWp Leistungsanteil, Teileinspeisung).<br />
               • ca. 5,45 ct/kWh (über 40 bis 100 kWp Leistungsanteil, Teileinspeisung).<br /><br />
@@ -142,12 +150,10 @@ function BetriebsmodellSelector({ value, onChange }) {
 
               <strong>Beispiel (typischer Wert): 50 kWp-Anlage mit Batteriespeicher und 70 % Eigenverbrauch:</strong><br />
               Durch den Batteriespeicher wird ein größerer Anteil der erzeugten Energie selbst genutzt 
-              und die Einspeisung ins öffentliche Netz reduziert.<br /><br />
-
+              und die Einspeisung ins öffentliche Netz reduziert.<br />
               • Eigenverbrauch: 35.000 kWh × 0,30 €/kWh ≈ 10.500 €/Jahr<br />
               • Netzeinspeisung: 15.000 kWh × gestaffelte EEG-Vergütung 
-              (Ø ca. 6,63 ct/kWh) ≈ 995 €/Jahr<br /><br />
-
+              (Ø ca. 6,63 ct/kWh) ≈ 995 €/Jahr<br />
               → wirtschaftlicher Nutzen ≈ 11.495 €/Jahr<br /><br />
 
               <strong>Anlagen über 100 kWp:</strong><br />
