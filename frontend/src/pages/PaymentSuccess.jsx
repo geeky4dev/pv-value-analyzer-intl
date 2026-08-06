@@ -11,7 +11,7 @@ function PaymentSuccess() {
 
             {/* Startseite Button */}
 
-            <div className="d-flex justify-content-center mt-5 mb-4">
+            <div className="d-flex justify-content-center mt-4 mb-4">
 
                 <a
                     href="/"
@@ -29,24 +29,43 @@ function PaymentSuccess() {
             </div>
 
 
+            {/* Produktname */}
 
+            <h2 className="display-6 text-primary fw-bold">
 
-            <h2 className="text-success">
+                PV Valuator
 
-                ✅ Zahlung erfolgreich
+                <span className="badge bg-info ms-2">
+                    PRO
+                </span>
 
             </h2>
 
 
+            {/* Produktbeschreibung */}
 
+            <p className="text-muted fst-italic fs-5 mb-5">
 
-            <p className="mt-3">
-
-                Vielen Dank für Ihren Kauf.
+                Professionelle Wirtschaftlichkeitsanalyse
+                für Photovoltaikanlagen
 
             </p>
 
 
+            {/* Erfolgsmeldung */}
+
+            <h3 className="text-success fw-bold">
+
+                ✅ Zahlung erfolgreich
+
+            </h3>
+
+
+            <p className="mt-4 fs-5">
+
+                Vielen Dank für Ihren Kauf.
+
+            </p>
 
 
             <p className="text-muted">
@@ -54,7 +73,6 @@ function PaymentSuccess() {
                 Ihre Credits wurden Ihrem Konto gutgeschrieben.
 
             </p>
-
 
 
         </div>

@@ -515,32 +515,46 @@ return (
 
             </div>*/}
 
-            <div className="container mt-3 d-flex justify-content-between align-items-center">
+            <div className="container mt-3 no-print">
 
-              <a
-                  href="https://www.apps4green.com/"
-                  className="btn btn-primary text-white"
-              >
-                  <i className="bi bi-arrow-left me-2 text-white"></i>
-                  <span className="text-white">
-                      Startseite
-                  </span>
-              </a>
+              <div className="row align-items-center">
+
+                {/* Izquierda */}
+                <div className="col-4 text-start">
+
+                  <a
+                    href="https://www.apps4green.com/"
+                    className="btn btn-primary text-white"
+                  >
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
+                    Startseite
+                  </a>
+
+                </div>
 
 
-              <UserMenu />
+                {/* Centro */}
+                <div className="col-4 text-center">
 
-          </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handlePrint}
+                  >
+                    📄 Ansicht als PDF speichern
+                  </button>
+
+                </div>
 
 
-            <div className="container mt-3 no-print text-center">
+                {/* Derecha */}
+                <div className="col-4 d-flex justify-content-end">
 
-              <button
-                className="btn btn-primary"
-                onClick={handlePrint}
-              >
-                📄 Ansicht als PDF speichern
-              </button>
+                  <UserMenu />
+
+                </div>
+
+
+              </div>
 
             </div>
 
@@ -552,7 +566,7 @@ return (
 
               <h2 className="display-6 mb-4 text-primary text-center fw-bold">
 
-                PV-Wirtschaftlichkeitsanalyse System
+                PV Valuator
 
                 <span className="badge bg-info ms-2">
                   PRO
@@ -563,8 +577,7 @@ return (
 
               <p className="mb-4 text-muted fst-italic text-center fs-5">
 
-                Schnelle und automatisierte Bewertung von Photovoltaik-Investitionen mit professionellem PDF-Bericht
-
+                Schnelle und transparente Bewertung von Photovoltaikanlagen inklusive professionellem PDF-Bericht
               </p>
 
 
@@ -871,7 +884,39 @@ return (
 
     </Routes>
 
+  <footer className="mt-5 py-3 border-top bg-light">
+    <div className="container">
 
+      <div className="d-flex justify-content-center align-items-center gap-3">
+
+        <img
+          src="/logo-apps4green.png"
+          alt="Apps For Green"
+          style={{ height: "30px" }}
+        />
+
+        <span className="text-muted small">
+          © 2026 Apps For Green
+        </span>
+
+        <span className="text-muted">
+          ·
+        </span>
+
+        <a
+          href="https://www.apps4green.com"
+          className="text-decoration-none small"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          www.apps4green.com
+        </a>
+
+      </div>
+
+    </div>
+  </footer>
+  
   </FinancialProvider>
 
 );

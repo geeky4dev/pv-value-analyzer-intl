@@ -268,11 +268,28 @@ function Register() {
 
 
 
+                            <h2 className="text-center text-primary fw-bold mb-2">
+
+                                PV Valuator
+
+                                <span className="badge bg-info ms-2">
+                                    PRO
+                                </span>
+
+                            </h2>
+
+
+                            <p className="text-center text-muted mb-4">
+
+                                Professionelle Wirtschaftlichkeitsanalyse
+                                für Photovoltaikanlagen
+
+                            </p>
+
+
                             <h3 className="text-center mb-4">
 
-
                                 📝 Neues Konto erstellen
-
 
                             </h3>
 

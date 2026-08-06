@@ -49,11 +49,22 @@ function Home() {
             </div>
 
 
-            <h1 className="text-center mt-5">
+            <h1 className="text-center mt-5 text-primary fw-bold">
 
-                PV-Wirtschaftlichkeitsanalyse System PRO
+                PV Valuator
+
+                <span className="badge bg-info ms-2">
+                    PRO
+                </span>
 
             </h1>
+
+
+            <p className="text-center text-muted fst-italic fs-5">
+
+                Professionelle Wirtschaftlichkeitsanalyse für Photovoltaikanlagen
+
+            </p>
 
 
             <p className="text-center text-muted">

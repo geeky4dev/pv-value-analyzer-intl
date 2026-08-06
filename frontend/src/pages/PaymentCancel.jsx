@@ -31,12 +31,28 @@ function PaymentCancel() {
 
 
 
-            <h2 className="text-warning">
+            <h2 className="text-primary fw-bold">
 
-                ⚠️ Zahlung abgebrochen
+                PV Valuator
+
+                <span className="badge bg-info ms-2">
+                    PRO
+                </span>
 
             </h2>
 
+
+            <p className="text-muted fst-italic mt-2">
+                Professionelle Wirtschaftlichkeitsanalyse
+                für Photovoltaikanlagen
+            </p>
+
+
+            <h3 className="text-warning mt-4">
+
+                ⚠️ Zahlung abgebrochen
+
+            </h3>
 
 
             <p className="mt-3">
