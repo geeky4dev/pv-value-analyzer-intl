@@ -2391,7 +2391,8 @@ def pdf():
                 signature_path = os.path.join(TEMP_DIR, f"signature_{uuid.uuid4().hex}.png")
                 with open(signature_path, "wb") as f:
                     f.write(sig_data)
-                pdf.image(signature_path, x=signature_x, y=signature_y, w=28)
+                pdf.image(signature_path, x=signature_x, y=signature_y, w=45)    
+                # pdf.image(signature_path, x=signature_x, y=signature_y, w=28)
             except Exception as e:
                 print("Signature error:", e)
 
