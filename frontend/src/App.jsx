@@ -523,7 +523,7 @@ return (
                 <div className="col-4 text-start">
 
                   <a
-                    href="https://www.apps4green.com/"
+                    href="https://www.pv-valuator.de/"
                     className="btn btn-primary text-white"
                   >
                     <i className="bi bi-arrow-left me-2 text-white"></i>
