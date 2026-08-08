@@ -213,7 +213,7 @@ function Register() {
 
                 <a
 
-                    href="/"
+                    href="https://www.pv-valuator.de/"
 
                     className="btn btn-primary text-white"
 
