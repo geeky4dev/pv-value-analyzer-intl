@@ -1,6 +1,11 @@
 // frontend/src/components/Login.jsx
+import React, {
+    useEffect,
+    useState
+} from "react";
 
-import React, { useState } from "react";
+import UserMenu from "../components/UserMenu.jsx";
+
 import { useAuth } from "../context/AuthContext";
 
 
