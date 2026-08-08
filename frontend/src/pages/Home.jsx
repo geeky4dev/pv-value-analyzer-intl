@@ -39,7 +39,7 @@ function Home() {
             const allowedPackages = [
                 "starter",
                 "professional",
-                "premium",
+                "expert",
                 "business"
             ];
 
