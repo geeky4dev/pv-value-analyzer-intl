@@ -14,7 +14,7 @@ function PaymentCancel() {
             <div className="d-flex justify-content-center mt-5 mb-4">
 
                 <a
-                    href="/"
+                    href="https://www.pv-valuator.de/"
                     className="btn btn-primary text-white"
                 >
 
