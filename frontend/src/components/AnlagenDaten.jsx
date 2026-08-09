@@ -113,6 +113,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="adresse"
                     value={formData.adresse}
                     onChange={handleChange}
+                    placeholder="Musterstraße 1"
                   />
                 </div>
 
@@ -124,6 +125,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="plz"
                     value={formData.plz}
                     onChange={handleChange}
+                    placeholder="54321"
                   />
                 </div>
 
@@ -135,6 +137,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="ort"
                     value={formData.ort}
                     onChange={handleChange}
+                    placeholder="Musterstadt"
                   />
                 </div>
 
@@ -146,6 +149,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="bundesland"
                     value={formData.bundesland}
                     onChange={handleChange}
+                    placeholder="Bundesland angeben"
                   />
                 </div>
 
@@ -157,6 +161,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="firma"
                     value={formData.firma}
                     onChange={handleChange}
+                    placeholder="Musterfirma GmbH"
                   />
                 </div>
 
@@ -168,6 +173,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
+                    placeholder="info@musterfirma.de"
                   />
                 </div>
 
@@ -179,6 +185,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="telefon"
                     value={formData.telefon}
                     onChange={handleChange}
+                    placeholder="055 12345678"
                   />
                 </div>
 
@@ -190,6 +197,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="leistung"
                     value={formData.leistung}
                     onChange={handleChange}
+                    placeholder="z.B. 10"
                   />
                 </div>
 

@@ -16,6 +16,8 @@ import gc
 
 import matplotlib
 
+import re
+
 matplotlib.use("Agg")
 matplotlib.rcParams['backend'] = 'Agg'
 
@@ -1464,6 +1466,12 @@ def pdf():
         ag = data.get("auftraggeber", {})
         anlage = data.get("anlagendaten", {})
 
+        print("========== DEBUG SACHVERSTAENDIGER ==========")
+        print("SACH:", sach)
+        print("PLZ_ORT:", repr(sach.get("plz_ort", "")))
+        print("==============================================")
+
+
         logo = sach.get("logo")
         logo_height = 0
 
@@ -1485,16 +1493,73 @@ def pdf():
         pdf.set_y(20 + logo_height + 10)
         pdf.ln(10)
 
+        # ======================================================
+        # ANSCHRIFT SACHVERSTÄNDIGER
+        # ======================================================
+
         pdf.set_font("DejaVu", "B", 11)
+
         name_only = sach.get("name", "").split("/")[0].strip()
-        pdf.cell(0, 6, name_only, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        pdf.cell(
+            0,
+            6,
+            name_only,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
 
         pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, sach.get("adresse", ""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"Telefon: {sach.get('phone','')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"E-Mail: {sach.get('email','')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # Straße
+        pdf.cell(
+            0,
+            6,
+            sach.get("adresse", "").strip(),
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
+
+        # PLZ + Ort
+        plz_ort_sach = sach.get("plz_ort", "").strip()
+
+        if plz_ort_sach:
+            pdf.cell(
+                0,
+                6,
+                plz_ort_sach,
+                new_x=XPos.LMARGIN,
+                new_y=YPos.NEXT
+            )
+
+        # Telefon
+        pdf.cell(
+            0,
+            6,
+            f"Telefon: {sach.get('phone', '')}",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
+
+        # E-Mail
+        pdf.cell(
+            0,
+            6,
+            f"E-Mail: {sach.get('email', '')}",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
+
+        # Web
         website = sach.get("website", "").strip()
-        pdf.cell(0, 6, f"Web: {website}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        pdf.cell(
+            0,
+            6,
+            f"Web: {website}",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
 
         pdf.ln(14)
 
@@ -1507,26 +1572,59 @@ def pdf():
 
         pdf.ln(12)
 
-        ort_dd = sach.get("ort") or sach.get("plz_ort") or ""
-        if not ort_dd:
-            adresse_sach = sach.get("adresse", "")
-            if "," in adresse_sach:
-                try:
-                    derecha = adresse_sach.split(",")[1].strip()
-                    partes = derecha.split(" ")
-                    ort_dd = partes[-1]
-                except:
-                    ort_dd = ""
+        # ======================================================
+        # ORT UND DATUM - DECKBLATT
+        # ======================================================
 
-        datum_dd = datetime.date.today().strftime("%d.%m.%Y")
-        pdf.set_x(pdf.w - pdf.r_margin - 60)
-        pdf.cell(60, 6, f"{ort_dd}, {datum_dd}", align="R", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        datum = datetime.date.today().strftime("%d.%m.%Y")
 
-        pdf.ln(12)
+        plz_ort = str(
+            sach.get("plz_ort", "") or ""
+        ).strip()
+
+        ort_final = ""
+
+        if plz_ort:
+            # "80634 München" -> "München"
+            ort_final = re.sub(
+                r"^\s*\d{5}\s*",
+                "",
+                plz_ort
+            ).strip()
+
+        ort_text = (
+            f"{ort_final}, {datum}"
+            if ort_final
+            else datum
+        )
+
+        pdf.set_font("DejaVu", "", 10)
+
+        pdf.cell(
+            0,
+            6,
+            ort_text,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+            align="R"
+        )
+
+        pdf.ln(8)
+
+        # ======================================================
+        # LINIE
+        # ======================================================
 
         pdf.set_draw_color(180, 180, 180)
         y_line = pdf.get_y()
-        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
+
+        pdf.line(
+            pdf.l_margin,
+            y_line,
+            pdf.w - pdf.r_margin,
+            y_line
+        )
+
         pdf.ln(4)
 
         betreff1 = "Wirtschaftlichkeitsanalyse der Photovoltaikanlage"
@@ -1717,11 +1815,11 @@ def pdf():
         pdf.cell(0, 6, f"Erstellungsdatum: {datetime.date.today().strftime('%d.%m.%Y')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="L")
         pdf.cell(0, 6, f"Dokument-ID: {document_id}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="L")
 
-        pdf.ln(8)
+        pdf.ln(7)
         y_line = pdf.get_y()
         pdf.set_draw_color(180, 180, 180)
         pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        pdf.ln(8)
+        pdf.ln(7)
 
         pdf.set_font("DejaVu", "B", 11)
         pdf.cell(0, 6, "1. AUFTRAGGEBER:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -1751,10 +1849,10 @@ def pdf():
         pdf.cell(0, 6, f"E-Mail: {sach.get('email', '')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.cell(0, 6, f"Web: {sach.get('website', '')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        pdf.ln(8)
+        pdf.ln(7)
         y_line = pdf.get_y()
         pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        pdf.ln(8)
+        pdf.ln(7)
 
         pdf.set_font("DejaVu", "B", 11)
         pdf.cell(0, 6, "3. ANLAGENOBJEKT:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -2339,10 +2437,56 @@ def pdf():
         pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
         pdf.ln(15)
 
-        ort_final = anlage.get("ort", "")
+        #ort_final = anlage.get("ort", "") Imprimiría Lugar del PV-Anlage
+
+        # ======================================================
+        # ORT UND DATUM - SACHVERSTÄNDIGER
+        # ======================================================
+
+        # PLZ + ORT del Sachverständigen
+        plz_ort = str(
+            sach.get("plz_ort", "") or ""
+        ).strip()
+
+        # ======================================================
+        # NUR DEN ORTSNAMEN FÜR "ORT, DATUM" VERWENDEN
+        # ======================================================
+
+        ort_final = plz_ort
+
+        if plz_ort:
+            # Beispiel:
+            # "54321 Musterstadt" -> "Musterstadt"
+            #
+            # Entfernt eine deutsche 5-stellige PLZ am Anfang.
+            ort_final = re.sub(
+                r"^\s*\d{5}\s*",
+                "",
+                plz_ort
+            ).strip()
+
+            print("========== DEBUG ORT ==========")
+            print("PLZ_ORT RECIBIDO:", repr(plz_ort))
+            print("ORT_FINAL CALCULADO:", repr(ort_final))
+            print("================================")
+
+        # ======================================================
+        # DATUM
+        # ======================================================
+
         datum = datetime.date.today().strftime("%d.%m.%Y")
 
+        print("========== DEBUG DATUM ==========")
+        print("DATUM:", repr(datum))
+        print("ORT_FINAL:", repr(ort_final))
+        print("=================================")
+
+        # ------------------------------------------------------
+        # POSICIONES
+        # ------------------------------------------------------
+
         base_y = pdf.get_y()
+
         logo_x = pdf.l_margin
         logo_y = base_y + 8
 
@@ -2352,15 +2496,56 @@ def pdf():
         signature_x = text_x
         signature_y = base_y + 20
 
-        pdf.set_xy(text_x, text_y)
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "ORT, DATUM:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        # ======================================================
+        # ORT, DATUM
+        # ======================================================
+
+        pdf.set_xy(
+            text_x,
+            text_y
+        )
+
+        pdf.set_font(
+            "DejaVu",
+            "B",
+            11
+        )
+
+        pdf.cell(
+            0,
+            6,
+            "ORT, DATUM:",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
 
         pdf.set_x(text_x)
-        pdf.set_font("DejaVu", "", 10)
-        ort_text = f"{ort_final}, {datum}" if ort_final else datum
-        pdf.cell(0, 6, ort_text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
+        pdf.set_font(
+            "DejaVu",
+            "",
+            10
+        )
+
+        ort_text = (
+            f"{ort_final}, {datum}"
+            if ort_final
+            else datum
+        )
+
+        pdf.cell(
+            0,
+            6,
+            ort_text,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
+
+
+
+        # ======================================================
+        # LOGO / UNTERSCHRIFT
+        # ======================================================
         logo = sach.get("logo")
         logo_path = None
 
