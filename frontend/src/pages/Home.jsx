@@ -258,7 +258,8 @@ function Home() {
 
     return (
 
-        <div className="container mt-5">
+        //<div className="container mt-5">
+        <div className="container mt-5 min-vh-100">
 
 
             <div className="d-flex justify-content-between align-items-center">
