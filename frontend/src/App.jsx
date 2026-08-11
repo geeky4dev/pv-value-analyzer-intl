@@ -540,7 +540,8 @@ return (
                     className="btn btn-primary"
                     onClick={handlePrint}
                   >
-                    📄 Ansicht als PDF speichern
+                    {/* 📄 Ansicht als PDF speichern*/}
+                    Als PDF speichern
                   </button>
 
                 </div>
