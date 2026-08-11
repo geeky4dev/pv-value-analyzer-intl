@@ -567,7 +567,7 @@ return (
 
               <h2 className="display-6 mb-4 text-primary text-center fw-bold">
 
-                PV Valuator
+                PV-Valuator
 
                 <span className="badge bg-info ms-2">
                   PRO

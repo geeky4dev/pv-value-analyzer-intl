@@ -33,7 +33,7 @@ function PaymentCancel() {
 
             <h2 className="text-primary fw-bold">
 
-                PV Valuator
+                PV-Valuator
 
                 <span className="badge bg-info ms-2">
                     PRO

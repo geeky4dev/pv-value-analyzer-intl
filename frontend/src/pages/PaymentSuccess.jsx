@@ -33,7 +33,7 @@ function PaymentSuccess() {
 
             <h2 className="display-6 text-primary fw-bold">
 
-                PV Valuator
+                PV-Valuator
 
                 <span className="badge bg-info ms-2">
                     PRO

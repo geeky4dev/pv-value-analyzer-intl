@@ -285,7 +285,7 @@ function Home() {
 
             <h1 className="text-center mt-5 text-primary fw-bold">
 
-                PV Valuator
+                PV-Valuator
 
                 <span className="badge bg-info ms-2">
                     PRO
