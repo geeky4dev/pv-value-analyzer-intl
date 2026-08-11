@@ -541,7 +541,7 @@ return (
                     onClick={handlePrint}
                   >
                     {/* 📄 Ansicht als PDF speichern*/}
-                    Als PDF speichern
+                    PDF speichern
                   </button>
 
                 </div>
