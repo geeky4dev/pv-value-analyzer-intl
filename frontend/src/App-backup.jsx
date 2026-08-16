@@ -1,7 +1,14 @@
-// App.jsx - PV Wertgutachten v6 FINAL PRO (FIXED DATA MODEL)
-import React, { useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import 'bootstrap/dist/js/bootstrap.bundle.min';
+import React, { useState, useEffect } from "react";
+
+import { useAuth } from "./context/AuthContext";
+import Login from "./components/Login";
+
+import Register from "./components/Register";
+
+import UserMenu from "./components/UserMenu.jsx";
+
+import { useCredits } from "./context/CreditsContext";
+
 import "leaflet/dist/leaflet.css";
 
 import AnlagenDaten from "./components/AnlagenDaten.jsx";
@@ -16,10 +23,88 @@ import Dashboard from "./components/Dashboard.jsx";
 
 import { FinancialProvider } from "./components/FinancialContext.jsx";
 
+import {
+    Routes,
+    Route
+} from "react-router-dom";
+
+import MeineReports from "./components/MeineReports";
+
+import MeinProfil from "./components/MeinProfil.jsx";
+
+import Credits from "./pages/Credits.jsx";
+
+import PaymentSuccess from "./pages/PaymentSuccess.jsx";
+
+import PaymentCancel from "./pages/PaymentCancel.jsx";
+
+import Home from "./pages/Home.jsx";
+
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5001";
 
+
 function App() {
+
+  // 1. Stripe pages primero
+  const pathname = window.location.pathname;
+
+
+  if (pathname === "/payment-success") {
+
+      return <PaymentSuccess />;
+
+  }
+
+
+  if (pathname === "/payment-cancel") {
+
+      return <PaymentCancel />;
+
+  }
+
+ // 2. Después cargar aplicación normal
+  const {
+      user,
+      profile,
+      loading
+  } = useAuth();
+
+  const {
+    credits,
+    loadingCredits
+  } = useCredits();
+
+  console.log(
+    "CREDITS:",
+    credits,
+    "LOADING:",
+    loadingCredits
+  );
+
+  console.log(
+    "APP USER:",
+    user
+  );
+
+  console.log(
+      "APP PROFILE:",
+      profile
+  );
+
+  console.log(
+      "APP LOADING:",
+      loading
+  );
+
+
+  console.log("AUTH USER:", user);
+  console.log("PROFILE:", profile);
+
+  const [showRegister, setShowRegister] = useState(false);
+
   const [formData, setFormData] = useState({
+
+
     anlagen: {
       adresse: "", plz: "", ort: "", bundesland: "",
       name: "", email: "", telefon: "",
@@ -53,14 +138,13 @@ function App() {
       spezifischerertrag: "",
       performance_ratio: "",
       degradation: "",
-      strompreis: "", 
+      strompreis: "",
       opex: "",
       jahresertrag: "",
       ertragswert: "",
       ertragswertKumuliert: ""
     },
 
-    // 🔥 FIXED: no empty string model (prevents NaN/0 bugs)
     restwert: {
       zukuenftige_gewinne: 0,
       restwert: 0,
@@ -82,11 +166,9 @@ function App() {
       interpretation: "",
       cashflows: []
     }
+
   });
 
-  // -----------------------------
-  // UPDATE FUNCTIONS
-  // -----------------------------
   const updateAnlagenData = (data) => {
     setFormData((prev) => ({
       ...prev,
@@ -106,46 +188,64 @@ function App() {
   };
 
   const updatePVGIS = (data) => {
-    setFormData((prev) => {
-      // 1. Normalisierung der Felder (Sicherstellen, dass wir die richtigen Namen aus PVGISForm erwischen)
-      const newSpezErtrag = data.spezifischer_ertrag || data.spezifischerErtrag || prev.ertragswert.spezifischerertrag;
-      const newProduction = data.production || data.annual_production || prev.ertragswert.jahresertrag;
-      
-      // 2. Performance Ratio (PR) sicherstellen
-      // Wichtig: Wenn PVGIS loss=0 liefert, MUSS das PR hier für die Berechnung aktiv sein
-      const currentPR = data.pr ?? prev.ertragswert.performance_ratio ?? 80;
 
+    setFormData((prev) => {
+
+      const newSpezErtrag =
+        data.spezifischer_ertrag ||
+        data.spezifischerErtrag ||
+        prev.ertragswert.spezifischerertrag;
+
+      const newProduction =
+        data.production ||
+        data.annual_production ||
+        prev.ertragswert.jahresertrag;
+
+      const currentPR =
+        data.pr ??
+        prev.ertragswert.performance_ratio ??
+        80;
+   
       return {
+
         ...prev,
-        // Update der PVGIS-Sektion
-        pvgis: { 
-          ...prev.pvgis, 
+
+        pvgis: {
+          ...prev.pvgis,
           ...data,
           spezifischerErtrag: newSpezErtrag,
           production: newProduction
         },
-        // Update der Anlagendaten (Standort)
+
         anlagen: {
           ...prev.anlagen,
           latitude: data.latitude || prev.anlagen.latitude,
           longitude: data.longitude || prev.anlagen.longitude
         },
-        // KRITISCH: Update der Ertragswert-Sektion (Basis für den PDF-Bericht)
+
         ertragswert: {
           ...prev.ertragswert,
-          anlagengroesse: data.anlagengroesse || prev.ertragswert.anlagengroesse,
-          spezifischerertrag: newSpezErtrag, // Jetzt korrekt gemappt
+          anlagengroesse:
+            data.anlagengroesse ||
+            prev.ertragswert.anlagengroesse,
+
+          spezifischerertrag: newSpezErtrag,
+
           performance_ratio: currentPR,
+
           production: newProduction,
-          // Wir setzen jahresertrag explizit auf die neue Produktion, 
-          // damit FinanzielleBewertung sofort neu rechnet
-          jahresertrag: newProduction 
+
+          jahresertrag: newProduction
         }
+
       };
+
     });
+
   };
 
   const updateBuchwert = (data) => {
+
     setFormData((prev) => ({
 
       ...prev,
@@ -155,185 +255,673 @@ function App() {
         ...data
       },
 
-      // ✅ NUEVO
       restwert: {
         ...prev.restwert,
-
         restlaufzeit:
           Number(data.restlaufzeit) ||
           prev.restwert.restlaufzeit
       },
 
-      // ✅ NUEVO
       ertragswert: {
         ...prev.ertragswert,
-
         restlaufzeit:
           Number(data.restlaufzeit) ||
           prev.ertragswert.restlaufzeit
       }
 
     }));
+
   };
 
   const updateErtragswert = (data) => {
+
     setFormData((prev) => ({
+
       ...prev,
+
       ertragswert: {
+
         ...prev.ertragswert,
+
         ...data,
-        anlagengroesse: data.anlagengroesse || prev.ertragswert.anlagengroesse,
-        spezifischerertrag: data.spezifischer_ertrag ?? data.spezifischerertrag ?? prev.ertragswert.spezifischerertrag,
-        performance_ratio: data.performance_ratio || prev.ertragswert.performance_ratio,
-        degradation: data.degradation_anual ?? data.degradation ?? prev.ertragswert.degradation,
-        opex: data.opex || prev.ertragswert.opex,
+
+        anlagengroesse:
+          data.anlagengroesse ||
+          prev.ertragswert.anlagengroesse,
+
+        spezifischerertrag:
+          data.spezifischer_ertrag ??
+          data.spezifischerertrag ??
+          prev.ertragswert.spezifischerertrag,
+
+        performance_ratio:
+          data.performance_ratio ||
+          prev.ertragswert.performance_ratio,
+
+        degradation:
+          data.degradation_anual ??
+          data.degradation ??
+          prev.ertragswert.degradation,
+
+        opex:
+          data.opex ||
+          prev.ertragswert.opex,
+
         strompreis:
-        data.strompreis !== undefined
-          ? parseFloat(data.strompreis)
-          : prev.ertragswert.strompreis,
+          data.strompreis !== undefined
+            ? parseFloat(data.strompreis)
+            : prev.ertragswert.strompreis
+
       }
+
     }));
+
   };
 
-  // 🔥 FIXED: strict numeric normalization (CRITICAL FOR PDF)
   const updateRestwert = (data) => {
+
     setFormData((prev) => ({
+
       ...prev,
+
       restwert: {
+
         ...prev.restwert,
 
-        zukuenftige_gewinne: Number(data.zukuenftige_gewinne) || 0,
-        restwert: Number(data.restwert) || 0,
+        zukuenftige_gewinne:
+          Number(data.zukuenftige_gewinne) || 0,
 
-        kostenabschlag: Number(data.kostenabschlag) ?? prev.restwert.kostenabschlag,
-        verkaufsabschlag: Number(data.verkaufsabschlag) ?? prev.restwert.verkaufsabschlag,
+        restwert:
+          Number(data.restwert) || 0,
 
-        wartung: data.wartung ?? prev.restwert.wartung,
-        zustand: data.zustand ?? prev.restwert.zustand,
-        pr: Number(data.pr) || prev.restwert.pr,
-        restlaufzeit: Number(data.restlaufzeit) || prev.restwert.restlaufzeit,
-        marktfaktor: Number(data.marktfaktor) || prev.restwert.marktfaktor
+        kostenabschlag:
+          Number(data.kostenabschlag) ??
+          prev.restwert.kostenabschlag,
+
+        verkaufsabschlag:
+          Number(data.verkaufsabschlag) ??
+          prev.restwert.verkaufsabschlag,
+
+        wartung:
+          data.wartung ??
+          prev.restwert.wartung,
+
+        zustand:
+          data.zustand ??
+          prev.restwert.zustand,
+
+        pr:
+          Number(data.pr) ||
+          prev.restwert.pr,
+
+        restlaufzeit:
+          Number(data.restlaufzeit) ||
+          prev.restwert.restlaufzeit,
+
+        marktfaktor:
+          Number(data.marktfaktor) ||
+          prev.restwert.marktfaktor
+
       }
+
     }));
+
   };
 
   const updateFinanzielleBewertung = (data) => {
+
     setFormData((prev) => ({
+
       ...prev,
-      finanzielleBewertung: { ...prev.finanzielleBewertung, ...data }
+
+      finanzielleBewertung: {
+        ...prev.finanzielleBewertung,
+        ...data
+      }
+
     }));
+
   };
 
-  // -----------------------------
-  // PRINT
-  // -----------------------------
   const handlePrint = () => {
     window.print();
   };
 
-
   const [ertragsResult, setErtragsResult] = useState(null);
 
 
-  // -----------------------------
-  // RENDER
-  // -----------------------------
-  return (
-    <FinancialProvider>
-      <div className="container mt-3 no-print">
-        <button className="btn btn-primary" onClick={handlePrint}>
-          📄 Ansicht als PDF speichern
-        </button>
+      if (loading) {
+
+      return (
+
+          <div className="container mt-5 text-center">
+
+              <div className="spinner-border text-primary">
+              </div>
+
+              <p className="mt-3">
+                  Lade Anwendung...
+              </p>
+
+          </div>
+
+      );
+
+  }
+
+// ============================================
+// STRIPE RETURN PAGES (PUBLIC)
+// ============================================
+
+const path = window.location.pathname;
+
+
+if (path === "/payment-success") {
+
+    return <PaymentSuccess />;
+
+}
+
+
+if (path === "/payment-cancel") {
+
+    return <PaymentCancel />;
+
+}
+
+// ============================================
+// AUTHENTICATION REQUIRED
+// ============================================
+
+if (!user) {
+
+    return (
+
+        <>
+            {showRegister ? (
+
+                <Register />
+
+            ) : (
+
+                <Login />
+
+            )}
+
+            <div className="text-center mt-3">
+
+                {showRegister ? (
+
+                    <button
+                        className="btn btn-link"
+                        onClick={() => setShowRegister(false)}
+                    >
+                        Bereits registriert? Jetzt anmelden
+                    </button>
+
+                ) : (
+
+                    <button
+                        className="btn btn-link"
+                        onClick={() => setShowRegister(true)}
+                    >
+                        Noch kein Konto? Jetzt registrieren
+                    </button>
+
+                )}
+
+            </div>
+
+        </>
+
+    );
+
+}
+
+return (
+
+  <FinancialProvider>
+
+    <Routes>
+
+      <Route 
+        path="/reports" 
+        element={<MeineReports />} 
+      />
+
+      <Route
+        path="/profil"
+        element={<MeinProfil />}
+      />
+
+      <Route
+        path="/credits"
+        element={<Credits />}
+     />
+
+      <Route
+        path="/"
+        element={<Home />}
+    />
+      <Route
+        path="/analyse"
+        element={
+
+          <>
+
+            {/*<div className="container mt-3 d-flex justify-content-end">
+
+              <UserMenu />
+
+            </div>*/}
+
+            <div className="container mt-3 no-print">
+
+              <div className="row align-items-center">
+
+                {/* Izquierda */}
+                <div className="col-4 text-start">
+
+                  <a
+                    href="https://www.pv-valuator.de/"
+                    className="btn btn-primary text-white"
+                  >
+                    <i className="bi bi-arrow-left me-2 text-white"></i>
+                    Startseite
+                  </a>
+
+                </div>
+
+
+                {/* Centro */}
+                <div className="col-4 text-center">
+
+                  <button
+                    className="btn btn-primary"
+                    onClick={handlePrint}
+                  >
+                    {/* 📄 Ansicht als PDF speichern*/}
+                    PDF speichern
+                  </button>
+
+                </div>
+
+
+                {/* Derecha */}
+                <div className="col-4 d-flex justify-content-end">
+
+                  <UserMenu />
+
+                </div>
+
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="pv-report"
+              className="container mt-4"
+            >
+
+              <h2 className="display-6 mb-4 text-primary text-center fw-bold">
+
+                PV-Valuator
+
+                <span className="badge bg-info ms-2">
+                  PRO
+                </span>
+
+              </h2>
+
+
+              <p className="mb-4 text-muted fst-italic text-center fs-5">
+
+                Schnelle und transparente Bewertung von Photovoltaikanlagen inklusive professionellem PDF-Bericht
+              </p>
+
+
+              <div className="row g-3 align-items-start">
+
+
+                <div className="col-lg-6 d-flex flex-column gap-3">
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+                    <div className="card-body">
+
+                      <AnlagenDaten
+
+                        onDataChange={updateAnlagenData}
+
+                        betriebsmodell={formData.betriebsmodell}
+
+                        anlagenData={formData.anlagen}
+
+                      />
+
+                    </div>
+
+                  </div>
+
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+                    <div className="card-body">
+
+                      <BetriebsmodellSelector
+
+                        value={formData.betriebsmodell}
+
+                        onChange={updateBetriebsmodell}
+
+                      />
+
+                    </div>
+
+                  </div>
+
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+                    <div className="card-body">
+
+                      <Buchwert
+
+                        BASE_URL={BASE_URL}
+
+                        anlagenData={formData.anlagen}
+
+                        onResult={updateBuchwert}
+
+                      />
+
+                    </div>
+
+                  </div>
+
+
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+                    <div className="card-body">
+
+                      <Ertragswert
+
+                        BASE_URL={BASE_URL}
+
+                        betriebsmodell={formData.betriebsmodell}
+
+                        pvgisProduction={formData.pvgis}
+
+                        anlagengroesse={
+                          formData.pvgis?.anlagengroesse ||
+                          formData.anlagen?.leistung ||
+                          ""
+                        }
+
+                        restlaufzeit={
+                          formData.ertragswert.restlaufzeit
+                        }
+
+                        ertragswertData={
+                          formData.ertragswert
+                        }
+
+
+                        onResult={(data)=>{
+
+                          updateErtragswert(data);
+
+                          setErtragsResult(data);
+
+                        }}
+
+                      />
+
+                    </div>
+
+                  </div>
+
+
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+                    <div className="card-body">
+
+                      <PVGISForm
+
+                        BASE_URL={BASE_URL}
+
+                        pvgisData={formData.pvgis}
+
+                        onChange={updatePVGIS}
+
+                      />
+
+                    </div>
+
+                  </div>
+
+
+
+                </div>
+
+
+
+
+
+                <div className="col-lg-6 d-flex flex-column gap-3">
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+                    <div className="card-body">
+
+
+                      <FinanzielleBewertung
+
+                        ertragswertData={formData.ertragswert}
+
+                        buchwertData={formData.buchwert}
+
+                        onResult={updateFinanzielleBewertung}
+
+                      />
+
+
+
+                      {
+                        formData.finanzielleBewertung?.npv &&
+
+                        <Dashboard
+
+                          data={
+                            formData.finanzielleBewertung
+                          }
+
+                        />
+
+                      }
+
+
+
+                    </div>
+
+                  </div>
+
+
+
+
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+
+                    <div className="card-body">
+
+
+                      <Restwert
+
+                        BASE_URL={BASE_URL}
+
+                        buchwertData={formData.buchwert}
+
+                        ertragswert={
+                          ertragsResult?.ertragswertKumuliert
+                        }
+
+                        performanceRatio={
+                          ertragsResult?.performance_ratio
+                        }
+
+                        restlaufzeit={
+                          formData.ertragswert?.restlaufzeit
+                        }
+
+                        anlagenData={
+                          formData.anlagen
+                        }
+
+                        zustandAnlage={
+                          formData.anlagen?.zustand
+                        }
+
+                        onResult={updateRestwert}
+
+                      />
+
+
+                    </div>
+
+
+                  </div>
+
+
+
+
+
+
+                  <div className="card rounded-4 shadow-sm bg-white border-light">
+
+
+                    <div className="card-body">
+
+
+                      <ReportForm
+
+                        BASE_URL={BASE_URL}
+
+                        buchwertData={
+                          formData.buchwert
+                        }
+
+
+                        ertragswertData={{
+
+                          ...formData.ertragswert,
+
+                          betriebsmodell:
+                          formData.betriebsmodell,
+
+
+                          payback:
+                          formData.finanzielleBewertung?.payback
+
+                        }}
+
+
+                        restwertData={
+                          formData.restwert
+                        }
+
+
+                        anlagenData={
+                          formData.anlagen
+                        }
+
+
+                        pvgisData={
+                          formData.pvgis
+                        }
+
+
+                        finanzData={
+                          formData.finanzielleBewertung
+                        }
+
+                      />
+
+
+                    </div>
+
+
+                  </div>
+
+
+
+
+                </div>
+
+
+              </div>
+
+
+            </div>
+
+
+          </>
+
+        }
+
+      />
+
+
+    </Routes>
+
+  <footer className="mt-5 py-3 border-top bg-light">
+    <div className="container">
+
+      <div className="d-flex justify-content-center align-items-center gap-3">
+
+        <img
+          src="/logo-apps4green.png"
+          alt="Apps For Green"
+          style={{ height: "30px" }}
+        />
+
+        <span className="text-muted small">
+          © 2026 Apps For Green
+        </span>
+
+        <span className="text-muted">
+          ·
+        </span>
+
+        <a
+          href="https://www.apps4green.com"
+          className="text-decoration-none small"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          www.apps4green.com
+        </a>
+
       </div>
 
-      <div id="pv-report" className="container mt-4">
+    </div>
+  </footer>
+  
+  </FinancialProvider>
 
-        <h2 className="mb-4 text-primary">
-          PV-Wirtschaftlichkeitsanalyse System
-          <span className="badge bg-info ms-2">PRO</span>
-        </h2>
+);
 
-        <p className="mb-4 text-muted fst-italic">
-          Schnelle und automatisierte Bewertung von Photovoltaik-Investitionen mit professionellem PDF-Bericht
-        </p>
-
-        <AnlagenDaten
-          onDataChange={updateAnlagenData}
-          betriebsmodell={formData.betriebsmodell}
-          anlagenData={formData.anlagen}
-        />
-
-        <BetriebsmodellSelector
-          value={formData.betriebsmodell}
-          onChange={updateBetriebsmodell}
-        />
-
-        <Buchwert
-          BASE_URL={BASE_URL}
-          anlagenData={formData.anlagen}
-          onResult={updateBuchwert}
-        />
-
-        <Ertragswert
-          BASE_URL={BASE_URL}
-          betriebsmodell={formData.betriebsmodell}
-          pvgisProduction={formData.pvgis}
-          anlagengroesse={
-            formData.pvgis?.anlagengroesse ||
-            formData.anlagen?.leistung ||
-            ""
-          }
-          restlaufzeit={formData.ertragswert.restlaufzeit}
-          ertragswertData={formData.ertragswert}
-          onResult={(data) => {
-            updateErtragswert(data);
-            setErtragsResult(data); // 🔥 NUEVO: guardas también el resultado global
-          }}
-        />
-
-        <PVGISForm
-          BASE_URL={BASE_URL}
-          pvgisData={formData.pvgis}
-          onChange={updatePVGIS}
-        />
-
-        <FinanzielleBewertung
-          ertragswertData={formData.ertragswert}
-          buchwertData={formData.buchwert}
-          onResult={updateFinanzielleBewertung}
-        />
-
-        {formData.finanzielleBewertung?.npv && (
-          <Dashboard data={formData.finanzielleBewertung} />
-        )}
-
-        <Restwert
-          BASE_URL={BASE_URL}
-          buchwertData={formData.buchwert}
-          ertragswert={ertragsResult?.ertragswertKumuliert}
-          performanceRatio={ertragsResult?.performance_ratio}
-          restlaufzeit={formData.ertragswert?.restlaufzeit}
-          anlagenData={formData.anlagen}
-          onResult={updateRestwert}
-        />
-
-        <ReportForm
-          BASE_URL={BASE_URL}
-          buchwertData={formData.buchwert}
-          ertragswertData={{
-            ...formData.ertragswert,
-            betriebsmodell: formData.betriebsmodell,
-            payback: formData.finanzielleBewertung?.payback
-          }}
-          restwertData={formData.restwert}   // ✅ NOW ALWAYS VALID
-          anlagenData={formData.anlagen}
-          pvgisData={formData.pvgis}
-          finanzData={formData.finanzielleBewertung}
-        />
-
-      </div>
-    </FinancialProvider>
-  );
 }
 
 export default App;
