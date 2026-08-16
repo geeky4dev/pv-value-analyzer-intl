@@ -197,7 +197,7 @@ function LoginRegister({ onForgotPassword }) {
 
             <div
             className="d-flex align-items-center mb-4" 
-            style={{ gap: "20px", marginLeft: "4px", marginTop: "50px" }}
+            style={{ gap: "20px", marginLeft: "4px", marginTop: "20px" }}
         >
             {/* Botón Startseite */}
             <a
@@ -242,11 +242,11 @@ function LoginRegister({ onForgotPassword }) {
 
                 <div className="col-md-6">
 
-                    <div
-                        className="card shadow rounded-4 h-100"
-                    >
+                    {/* SE QUITÓ 'h-100' DE AQUÍ */}
+                    <div className="card shadow rounded-4">
 
-                        <div className="card-body p-4">
+                        {/* Se ajustó el padding a p-3 para un contenedor más compacto */}
+                        <div className="card-body p-3">
 
                             <h2
                                 className="mb-2"
@@ -266,13 +266,10 @@ function LoginRegister({ onForgotPassword }) {
                                 }}
                             />
 
-
                             <form onSubmit={handleLogin}>
 
                                 {/* Email */}
-
                                 <div className="mb-3">
-
                                     <label className="form-label">
                                         Email
                                     </label>
@@ -287,20 +284,15 @@ function LoginRegister({ onForgotPassword }) {
                                         placeholder="email@example.com"
                                         required
                                     />
-
                                 </div>
 
-
                                 {/* Passwort */}
-
                                 <div className="mb-2">
-
                                     <label className="form-label">
                                         Passwort
                                     </label>
 
                                     <div className="input-group">
-
                                         <input
                                             type={
                                                 showLoginPassword
@@ -329,16 +321,11 @@ function LoginRegister({ onForgotPassword }) {
                                                 ? "🙈"
                                                 : "👁️"}
                                         </button>
-
                                     </div>
-
                                 </div>
 
-
                                 {/* Passwort vergessen */}
-
-                                <div className="mb-4">
-
+                                <div className="mb-3">
                                     <button
                                         type="button"
                                         className="btn btn-link p-0"
@@ -346,47 +333,33 @@ function LoginRegister({ onForgotPassword }) {
                                     >
                                         Haben Sie Ihr Passwort vergessen?
                                     </button>
-
                                 </div>
 
-
                                 {/* Einloggen */}
-
                                 <button
                                     type="submit"
                                     className="btn btn-primary w-100"
                                     disabled={loginLoading}
                                 >
-
                                     {loginLoading
                                         ? "Anmelden..."
                                         : "Einloggen"}
-
                                 </button>
-
 
                             </form>
 
-
                             {/* Error */}
-
                             {loginError && (
-
-                                <div className="alert alert-danger mt-3">
+                                <div className="alert alert-danger mt-3 mb-0">
                                     {loginError}
                                 </div>
-
                             )}
 
-
                             {/* Success */}
-
                             {loginMessage && (
-
-                                <div className="alert alert-success mt-3">
+                                <div className="alert alert-success mt-3 mb-0">
                                     {loginMessage}
                                 </div>
-
                             )}
 
                         </div>
