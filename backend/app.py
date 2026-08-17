@@ -82,31 +82,29 @@ if not STRIPE_WEBHOOK_SECRET:
         "STRIPE_WEBHOOK_SECRET no está configurada"
     )    
 
+
 # ======================================================
 # STRIPE PRODUCTS / CREDIT PACKAGES
 # ======================================================
 
-
 STRIPE_PRODUCTS = {
     "starter": {
-        "price_id": "price_1TzhfTLNUnDmvz8q5aaqC8rL",
+        "price_id": "price_1U5RRBLrbrHMdmYwia1MY6bJ",
         "credits": 10
     },
     "professional": {
-        "price_id": "price_1TzhQXLNUnDmvz8qWTlHOdCY",
+        "price_id": "price_1U5RalLrbrHMdmYwwjbpNWK1",
         "credits": 25
     },
     "expert": {
-        "price_id": "price_1TzhTSLNUnDmvz8qn8y9bhbs",
+        "price_id": "price_1U5RfHLrbrHMdmYwEOURTomw",
         "credits": 50
     },
     "business": {
-        "price_id": "price_1TzhZzLNUnDmvz8qNppAjxOR",
+        "price_id": "price_1U5RhtLrbrHMdmYwHespkzCH",
         "credits": 100
     }
 }
-
-
 
 # ======================================================
 # CREDIT PACKAGES
