@@ -31,14 +31,20 @@ function Register() {
     const [message, setMessage] = useState("");
 
 
-
-
-
     const handleRegister = async (e) => {
 
 
         e.preventDefault();
 
+        // =====================================================
+        // GOOGLE ANALYTICS 4 - REGISTRATION START
+        // =====================================================
+
+        if (typeof window.gtag === "function") {
+
+            window.gtag("event", "registration_start");
+
+        }
 
         setLoading(true);
 
