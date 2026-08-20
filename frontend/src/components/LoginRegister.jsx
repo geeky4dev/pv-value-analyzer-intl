@@ -43,6 +43,16 @@ function LoginRegister({ onForgotPassword }) {
 
         e.preventDefault();
 
+        // =====================================================
+        // GOOGLE ANALYTICS 4 - REGISTRATION START
+        // =====================================================
+
+        if (typeof window.gtag === "function") {
+
+            window.gtag("event", "registration_start");
+
+        }
+
         setLoginError("");
         setLoginMessage("");
         setLoginLoading(true);
