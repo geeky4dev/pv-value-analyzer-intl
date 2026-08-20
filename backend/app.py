@@ -193,6 +193,82 @@ def get_credits(email):
 
 
 # ======================================================
+# STRIPE CHECKOUT SESSION
+# ======================================================
+
+@app.route(
+    "/stripe/checkout-session/<session_id>",
+    methods=["GET"]
+)
+def get_checkout_session(session_id):
+
+    try:
+
+        session = stripe.checkout.Session.retrieve(
+            session_id
+        )
+
+        if session.payment_status != "paid":
+
+            return jsonify({
+                "paid": False
+            }), 200
+
+        return jsonify({
+
+            "paid": True,
+
+            "transaction_id": session.id,
+
+            "value": (
+                session.amount_total / 100
+                if session.amount_total is not None
+                else 0
+            ),
+
+            "currency": (
+                session.currency.upper()
+                if session.currency
+                else "EUR"
+            ),
+
+            "package": (
+                session.metadata.get("package")
+                if session.metadata
+                else None
+            ),
+
+            "credits": (
+                int(session.metadata.get("credits", 0))
+                if session.metadata
+                else 0
+            )
+
+        }), 200
+
+    except stripe.error.StripeError as e:
+
+        print(
+            "STRIPE SESSION ERROR:",
+            str(e)
+        )
+
+        return jsonify({
+            "error": "Stripe session could not be retrieved"
+        }), 400
+
+    except Exception as e:
+
+        print(
+            "CHECKOUT SESSION ERROR:",
+            str(e)
+        )
+
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
+
+# ======================================================
 # CREDIT MANAGEMENT
 # ======================================================
 
@@ -647,8 +723,9 @@ def create_checkout_session():
                         "quantity": 1
                     }
                 ],    
+                
                 success_url=(
-                    STRIPE_SUCCESS_URL
+                    f"{STRIPE_SUCCESS_URL}?session_id={{CHECKOUT_SESSION_ID}}"
                 ),
 
                 cancel_url=(
