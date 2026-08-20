@@ -60,6 +60,20 @@ function LoginRegister({ onForgotPassword }) {
 
             } else {
 
+
+                // =====================================================
+                // GOOGLE ANALYTICS 4 - LOGIN SUCCESS
+                // =====================================================
+
+                if (typeof window.gtag === "function") {
+
+                    window.gtag(
+                        "event",
+                        "login_success"
+                    );
+
+                }   
+
                 setLoginMessage(
                     "Login erfolgreich!"
                 );
