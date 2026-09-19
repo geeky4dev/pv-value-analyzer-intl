@@ -91,9 +91,8 @@ function PaymentSuccess() {
 
                 setPayment(data);
 
-
                 // -----------------------------------------
-                // GA4 PURCHASE
+                // GA4 PURCHASE + META PURCHASE
                 // -----------------------------------------
 
                 const purchaseKey =
@@ -106,48 +105,80 @@ function PaymentSuccess() {
                     );
 
 
-                if (
-                    !alreadyTracked &&
-                    typeof window.gtag === "function"
-                ) {
+                if (!alreadyTracked) {
 
-                    window.gtag(
-                        "event",
-                        "purchase",
-                        {
+                    // -----------------------------------------
+                    // GA4 PURCHASE
+                    // -----------------------------------------
 
-                            transaction_id:
-                                data.transaction_id,
+                    if (typeof window.gtag === "function") {
 
-                            value:
-                                data.value,
+                        window.gtag(
+                            "event",
+                            "purchase",
+                            {
 
-                            currency:
-                                data.currency,
+                                transaction_id:
+                                    data.transaction_id,
 
-                            items: [
+                                value:
+                                    data.value,
 
-                                {
+                                currency:
+                                    data.currency,
 
-                                    item_name:
-                                        `PV-Valuator PRO ${data.package}`,
+                                items: [
 
-                                    item_category:
-                                        "Credits",
+                                    {
 
-                                    quantity:
-                                        1,
+                                        item_name:
+                                            `PV-Valuator PRO ${data.package}`,
 
-                                    price:
-                                        data.value
+                                        item_category:
+                                            "Credits",
 
-                                }
+                                        quantity:
+                                            1,
 
-                            ]
+                                        price:
+                                            data.value
 
-                        }
-                    );
+                                    }
 
+                                ]
+
+                            }
+                        );
+
+                    }
+
+
+                    // -----------------------------------------
+                    // META PIXEL PURCHASE
+                    // -----------------------------------------
+
+                    if (typeof window.fbq === "function") {
+
+                        window.fbq(
+                            "track",
+                            "Purchase",
+                            {
+
+                                value:
+                                    data.value,
+
+                                currency:
+                                    data.currency
+
+                            }
+                        );
+
+                    }
+
+
+                    // -----------------------------------------
+                    // MARK PURCHASE AS TRACKED
+                    // -----------------------------------------
 
                     sessionStorage.setItem(
                         purchaseKey,
