@@ -39,6 +39,13 @@ import PaymentSuccess from "./pages/PaymentSuccess.jsx";
 import PaymentCancel from "./pages/PaymentCancel.jsx";
 import Home from "./pages/Home.jsx";
 
+/*
+=====================================================
+ INTERNATIONAL HERO BACKGROUND
+=====================================================
+*/
+import pvHeroIntl from "./assets/pv-hero-intl.jpg";
+
 
 const BASE_URL =
     import.meta.env.VITE_BACKEND_URL ||
@@ -128,6 +135,8 @@ function App() {
             degradation: "",
             strompreis: "",
             opex: "",
+            batterie_verluste: "",
+            netzeinspeisung_anteil: "",
             jahresertrag: "",
             ertragswert: "",
             ertragswertKumuliert: ""
@@ -407,7 +416,17 @@ function App() {
                 strompreis:
                     data.strompreis !== undefined
                         ? parseFloat(data.strompreis)
-                        : prev.ertragswert.strompreis
+                        : prev.ertragswert.strompreis,
+
+                batterie_verluste:
+                    data.batterie_verluste !== undefined
+                        ? Number(data.batterie_verluste) * 100
+                        : prev.ertragswert.batterie_verluste,
+
+                netzeinspeisung_anteil:
+                    data.netzeinspeisung_anteil !== undefined
+                        ? Number(data.netzeinspeisung_anteil) * 100
+                        : prev.ertragswert.netzeinspeisung_anteil
 
             }
 
@@ -640,573 +659,606 @@ function App() {
 
         <FinancialProvider>
 
-            <Routes>
+            {/* =================================================
+                INTERNATIONAL PV HERO BACKGROUND
 
-                {/* =========================================
-                    REPORTS
-                ========================================= */}
+                The image is intentionally softened with an
+                86% white overlay so it does not interfere with
+                forms, buttons, maps, tables or financial data.
+            ================================================= */}
 
-                <Route
-                    path="/reports"
-                    element={
-                        <MeineReports />
-                    }
-                />
+            <div
+                style={{
+                    minHeight: "100vh",
 
+                    backgroundImage:
+                        `linear-gradient(
+                            rgba(255, 255, 255, 0),
+                            rgba(255, 255, 255, 0)
+                        ),
+                        url(${pvHeroIntl})`,
 
-                {/* =========================================
-                    PROFILE
-                ========================================= */}
+                    backgroundSize: "cover",
 
-                <Route
-                    path="/profil"
-                    element={
-                        <MeinProfil />
-                    }
-                />
+                    backgroundPosition: "center",
 
+                    backgroundRepeat: "no-repeat",
 
-                {/* =========================================
-                    CREDITS
-                ========================================= */}
-
-                <Route
-                    path="/credits"
-                    element={
-                        <Credits />
-                    }
-                />
-
-
-                {/* =========================================
-                    HOME
-                ========================================= */}
-
-                <Route
-                    path="/"
-                    element={
-                        <Home />
-                    }
-                />
-
-
-                {/* =========================================
-                    ANALYSE
-                ========================================= */}
-
-                <Route
-                    path="/analyse"
-                    element={
-
-                        <>
-
-                            {/* =================================
-                                HEADER
-                            ================================= */}
-
-                            <div
-                                className="container mt-3 no-print"
-                            >
-
-                                <div
-                                    className="row align-items-center"
-                                >
-
-                                    {/* IZQUIERDA */}
-
-                                    <div
-                                        className="col-4 text-start"
-                                    >
-
-                                        <a
-                                            href="https://www.pv-valuator.de/"
-                                            className="btn btn-primary text-white"
-                                        >
-
-                                            <i className="bi bi-arrow-left me-2 text-white"></i>
-
-                                            Startseite
-
-                                        </a>
-
-                                    </div>
-
-
-                                    {/* CENTRO */}
-
-                                    <div
-                                        className="col-4 text-center"
-                                    >
-
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={handlePrint}
-                                        >
-                                            PDF speichern
-                                        </button>
-
-                                    </div>
-
-
-                                    {/* DERECHA */}
-
-                                    <div
-                                        className="col-4 d-flex justify-content-end"
-                                    >
-
-                                        <UserMenu />
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            {/* =================================
-                                PV REPORT
-                            ================================= */}
-
-                            <div
-                                id="pv-report"
-                                className="container mt-4"
-                            >
-
-                                <h2
-                                    className="display-6 mb-4 text-primary text-center fw-bold"
-                                >
-
-                                    PV-Valuator
-
-                                    <span
-                                        className="badge bg-info ms-2"
-                                    >
-                                        PRO
-                                    </span>
-
-                                </h2>
-
-
-                                <p
-                                    className="mb-4 text-muted fst-italic text-center fs-5"
-                                >
-
-                                    Schnelle und transparente Bewertung
-                                    von Photovoltaikanlagen inklusive
-                                    professionellem PDF-Bericht
-
-                                </p>
-
-
-                                <div
-                                    className="row g-3 align-items-start"
-                                >
-
-
-                                    {/* =================================
-                                        LEFT COLUMN
-                                    ================================= */}
-
-                                    <div
-                                        className="col-lg-6 d-flex flex-column gap-3"
-                                    >
-
-
-                                        {/* ANLAGENDATEN */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <AnlagenDaten
-
-                                                    onDataChange={
-                                                        updateAnlagenData
-                                                    }
-
-                                                    betriebsmodell={
-                                                        formData.betriebsmodell
-                                                    }
-
-                                                    anlagenData={
-                                                        formData.anlagen
-                                                    }
-
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* BETRIEBSMODELL */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <BetriebsmodellSelector
-
-                                                    value={
-                                                        formData.betriebsmodell
-                                                    }
-
-                                                    onChange={
-                                                        updateBetriebsmodell
-                                                    }
-
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* BUCHWERT */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <Buchwert
-
-                                                    BASE_URL={
-                                                        BASE_URL
-                                                    }
-
-                                                    anlagenData={
-                                                        formData.anlagen
-                                                    }
-
-                                                    onResult={
-                                                        updateBuchwert
-                                                    }
-
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* ERTRAGSWERT */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <Ertragswert
-
-                                                    BASE_URL={
-                                                        BASE_URL
-                                                    }
-
-                                                    betriebsmodell={
-                                                        formData.betriebsmodell
-                                                    }
-
-                                                    pvgisProduction={
-                                                        formData.pvgis
-                                                    }
-
-                                                    anlagengroesse={
-                                                        formData.pvgis?.anlagengroesse ||
-                                                        formData.anlagen?.leistung ||
-                                                        ""
-                                                    }
-
-                                                    restlaufzeit={
-                                                        formData.ertragswert.restlaufzeit
-                                                    }
-
-                                                    ertragswertData={
-                                                        formData.ertragswert
-                                                    }
-
-                                                    onResult={(data) => {
-
-                                                        updateErtragswert(
-                                                            data
-                                                        );
-
-                                                        setErtragsResult(
-                                                            data
-                                                        );
-
-                                                    }}
-
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* PVGIS */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <PVGISForm
-
-                                                    BASE_URL={
-                                                        BASE_URL
-                                                    }
-
-                                                    pvgisData={
-                                                        formData.pvgis
-                                                    }
-
-                                                    onChange={
-                                                        updatePVGIS
-                                                    }
-
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    {/* =================================
-                                        RIGHT COLUMN
-                                    ================================= */}
-
-                                    <div
-                                        className="col-lg-6 d-flex flex-column gap-3"
-                                    >
-
-
-                                        {/* FINANZIELLE BEWERTUNG */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <FinanzielleBewertung
-
-                                                    ertragswertData={
-                                                        formData.ertragswert
-                                                    }
-
-                                                    buchwertData={
-                                                        formData.buchwert
-                                                    }
-
-                                                    onResult={
-                                                        updateFinanzielleBewertung
-                                                    }
-
-                                                />
-
-
-                                                {
-                                                    formData
-                                                        .finanzielleBewertung
-                                                        ?.npv && (
-
-                                                        <Dashboard
-
-                                                            data={
-                                                                formData.finanzielleBewertung
-                                                            }
-
-                                                        />
-
-                                                    )
-                                                }
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* RESTWERT */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <Restwert
-
-                                                    BASE_URL={
-                                                        BASE_URL
-                                                    }
-
-                                                    buchwertData={
-                                                        formData.buchwert
-                                                    }
-
-                                                    ertragswert={
-                                                        ertragsResult
-                                                            ?.ertragswertKumuliert
-                                                    }
-
-                                                    performanceRatio={
-                                                        ertragsResult
-                                                            ?.performance_ratio
-                                                    }
-
-                                                    restlaufzeit={
-                                                        formData
-                                                            .ertragswert
-                                                            ?.restlaufzeit
-                                                    }
-
-                                                    anlagenData={
-                                                        formData.anlagen
-                                                    }
-
-                                                    zustandAnlage={
-                                                        formData
-                                                            .anlagen
-                                                            ?.zustand
-                                                    }
-
-                                                    onResult={
-                                                        updateRestwert
-                                                    }
-
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* REPORT FORM */}
-
-                                        <div
-                                            className="card rounded-4 shadow-sm bg-white border-light"
-                                        >
-
-                                            <div className="card-body">
-
-                                                <ReportForm
-
-                                                    BASE_URL={
-                                                        BASE_URL
-                                                    }
-
-                                                    buchwertData={
-                                                        formData.buchwert
-                                                    }
-
-                                                    ertragswertData={{
-
-                                                        ...formData.ertragswert,
-
-                                                        betriebsmodell:
-                                                            formData.betriebsmodell,
-
-                                                        payback:
-                                                            formData
-                                                                .finanzielleBewertung
-                                                                ?.payback
-
-                                                    }}
-
-                                                    restwertData={
-                                                        formData.restwert
-                                                    }
-
-                                                    anlagenData={
-                                                        formData.anlagen
-                                                    }
-
-                                                    pvgisData={
-                                                        formData.pvgis
-                                                    }
-
-                                                    finanzData={
-                                                        formData.finanzielleBewertung
-                                                    }
-
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </>
-
-                    }
-                />
-
-            </Routes>
-
-
-            {/* =============================================
-                FOOTER
-            ============================================= */}
-
-            <footer
-                className="mt-5 py-3 border-top bg-light"
+                    backgroundAttachment: "fixed"
+                }}
             >
 
-                <div className="container">
+                <Routes>
 
-                    <div
-                        className="d-flex justify-content-center align-items-center gap-3"
-                    >
+                    {/* =========================================
+                        REPORTS
+                    ========================================= */}
 
-                        <img
-                            src="/logo-apps4green.png"
-                            alt="Apps For Green"
-                            style={{
-                                height: "30px"
-                            }}
-                        />
+                    <Route
+                        path="/reports"
+                        element={
+                            <MeineReports />
+                        }
+                    />
 
-                        <span
-                            className="text-muted small"
+
+                    {/* =========================================
+                        PROFILE
+                    ========================================= */}
+
+                    <Route
+                        path="/profil"
+                        element={
+                            <MeinProfil />
+                        }
+                    />
+
+
+                    {/* =========================================
+                        CREDITS
+                    ========================================= */}
+
+                    <Route
+                        path="/credits"
+                        element={
+                            <Credits />
+                        }
+                    />
+
+
+                    {/* =========================================
+                        HOME
+                    ========================================= */}
+
+                    <Route
+                        path="/"
+                        element={
+                            <Home />
+                        }
+                    />
+
+
+                    {/* =========================================
+                        ANALYSE
+                    ========================================= */}
+
+                    <Route
+                        path="/analyse"
+                        element={
+
+                            <>
+
+                                {/* =================================
+                                    HEADER
+                                ================================= */}
+
+                                <div
+                                    className="container mt-3 no-print"
+                                >
+
+                                    <div
+                                        className="row align-items-center"
+                                    >
+
+                                        {/* IZQUIERDA */}
+
+                                        <div
+                                            className="col-4 text-start"
+                                        >
+
+                                            <a
+                                                href="https://www.pv-valuator.de/"
+                                                className="btn btn-primary text-white"
+                                            >
+
+                                                <i className="bi bi-arrow-left me-2 text-white"></i>
+
+                                                Home
+
+                                            </a>
+
+                                        </div>
+
+
+                                        {/* CENTRO */}
+
+                                        <div
+                                            className="col-4 text-center"
+                                        >
+
+                                            <button
+                                                className="btn btn-primary"
+                                                onClick={handlePrint}
+                                            >
+                                                Save PDF
+                                            </button>
+
+                                        </div>
+
+
+                                        {/* DERECHA */}
+
+                                        <div
+                                            className="col-4 d-flex justify-content-end"
+                                        >
+
+                                            <UserMenu />
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                {/* =================================
+                                    PV REPORT
+                                ================================= */}
+
+                                <div
+                                    id="pv-report"
+                                    className="container mt-4"
+                                >
+
+                                    <h2
+                                        className="display-6 mb-4 text-primary text-center fw-bold"
+                                    >
+
+                                        PV-Valuator
+
+                                        <span
+                                            className="badge bg-info ms-2"
+                                        >
+                                            PRO
+                                        </span>
+
+                                    </h2>
+
+
+                                    <p
+                                        className="mb-4 text-white-50 fst-italic text-center fs-5"
+                                    >
+
+                                        Fast and Transparent Photovoltaic System Valuation with a Professional PDF Report
+
+                                    </p>
+
+
+                                    <div
+                                        className="row g-3 align-items-start"
+                                    >
+
+
+                                        {/* =================================
+                                            LEFT COLUMN
+                                        ================================= */}
+
+                                        <div
+                                            className="col-lg-6 d-flex flex-column gap-3"
+                                        >
+
+
+                                            {/* ANLAGENDATEN */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <AnlagenDaten
+
+                                                        onDataChange={
+                                                            updateAnlagenData
+                                                        }
+
+                                                        betriebsmodell={
+                                                            formData.betriebsmodell
+                                                        }
+
+                                                        anlagenData={
+                                                            formData.anlagen
+                                                        }
+
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* BETRIEBSMODELL */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <BetriebsmodellSelector
+
+                                                        value={
+                                                            formData.betriebsmodell
+                                                        }
+
+                                                        onChange={
+                                                            updateBetriebsmodell
+                                                        }
+
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* BUCHWERT */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <Buchwert
+
+                                                        BASE_URL={
+                                                            BASE_URL
+                                                        }
+
+                                                        anlagenData={
+                                                            formData.anlagen
+                                                        }
+
+                                                        onResult={
+                                                            updateBuchwert
+                                                        }
+
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* ERTRAGSWERT */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <Ertragswert
+
+                                                        BASE_URL={
+                                                            BASE_URL
+                                                        }
+
+                                                        betriebsmodell={
+                                                            formData.betriebsmodell
+                                                        }
+
+                                                        pvgisProduction={
+                                                            formData.pvgis
+                                                        }
+
+                                                        anlagengroesse={
+                                                            formData.pvgis?.anlagengroesse ||
+                                                            formData.anlagen?.leistung ||
+                                                            ""
+                                                        }
+
+                                                        restlaufzeit={
+                                                            formData.ertragswert.restlaufzeit
+                                                        }
+
+                                                        ertragswertData={
+                                                            formData.ertragswert
+                                                        }
+
+                                                        onResult={(data) => {
+
+                                                            updateErtragswert(
+                                                                data
+                                                            );
+
+                                                            setErtragsResult(
+                                                                data
+                                                            );
+
+                                                        }}
+
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* PVGIS */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <PVGISForm
+
+                                                        BASE_URL={
+                                                            BASE_URL
+                                                        }
+
+                                                        pvgisData={
+                                                            formData.pvgis
+                                                        }
+
+                                                        onChange={
+                                                            updatePVGIS
+                                                        }
+
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {/* =================================
+                                            RIGHT COLUMN
+                                        ================================= */}
+
+                                        <div
+                                            className="col-lg-6 d-flex flex-column gap-3"
+                                        >
+
+
+                                            {/* FINANZIELLE BEWERTUNG */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <FinanzielleBewertung
+
+                                                        ertragswertData={
+                                                            formData.ertragswert
+                                                        }
+
+                                                        buchwertData={
+                                                            formData.buchwert
+                                                        }
+
+                                                        onResult={
+                                                            updateFinanzielleBewertung
+                                                        }
+
+                                                    />
+
+
+                                                    {
+                                                        formData
+                                                            .finanzielleBewertung
+                                                            ?.npv && (
+
+                                                            <Dashboard
+
+                                                                data={
+                                                                    formData.finanzielleBewertung
+                                                                }
+
+                                                            />
+
+                                                        )
+                                                    }
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* RESTWERT */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <Restwert
+
+                                                        BASE_URL={
+                                                            BASE_URL
+                                                        }
+
+                                                        buchwertData={
+                                                            formData.buchwert
+                                                        }
+
+                                                        ertragswert={
+                                                            ertragsResult
+                                                                ?.ertragswertKumuliert
+                                                        }
+
+                                                        performanceRatio={
+                                                            ertragsResult
+                                                                ?.performance_ratio
+                                                        }
+
+                                                        restlaufzeit={
+                                                            formData
+                                                                .ertragswert
+                                                                ?.restlaufzeit
+                                                        }
+
+                                                        anlagenData={
+                                                            formData.anlagen
+                                                        }
+
+                                                        zustandAnlage={
+                                                            formData
+                                                                .anlagen
+                                                                ?.zustand
+                                                        }
+
+                                                        onResult={
+                                                            updateRestwert
+                                                        }
+
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* REPORT FORM */}
+
+                                            <div
+                                                className="card rounded-4 shadow-sm bg-white border-light"
+                                            >
+
+                                                <div className="card-body">
+
+                                                    <ReportForm
+
+                                                        BASE_URL={
+                                                            BASE_URL
+                                                        }
+
+                                                        buchwertData={
+                                                            formData.buchwert
+                                                        }
+
+                                                        ertragswertData={{
+
+                                                            ...formData.ertragswert,
+
+                                                            betriebsmodell:
+                                                                formData.betriebsmodell,
+
+                                                            payback:
+                                                                formData
+                                                                    .finanzielleBewertung
+                                                                    ?.payback
+
+                                                        }}
+
+                                                        restwertData={
+                                                            formData.restwert
+                                                        }
+
+                                                        anlagenData={
+                                                            formData.anlagen
+                                                        }
+
+                                                        pvgisData={
+                                                            formData.pvgis
+                                                        }
+
+                                                        finanzData={
+                                                            formData.finanzielleBewertung
+                                                        }
+
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </>
+
+                        }
+                    />
+
+                </Routes>
+
+                {/* =============================================
+                    FOOTER
+                ============================================= */}
+
+                <footer
+                    className="mt-5 py-3"
+                    style={{
+                        backgroundColor: "#061A2B",
+                        borderTopColor: "rgba(255,255,255,0.12)"
+                    }}
+                >
+
+                    <div className="container">
+
+                        <div
+                            className="d-flex justify-content-center align-items-center gap-3"
                         >
-                            © 2026 Apps For Green
-                        </span>
 
-                        <span
-                            className="text-muted"
-                        >
-                            ·
-                        </span>
+                            <img
+                                src="/logo-apps4green.png"
+                                alt="Apps For Green"
+                                style={{
+                                    height: "30px"
+                                }}
+                            />
 
-                        <a
-                            href="https://www.apps4green.com"
-                            className="text-decoration-none small"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            www.apps4green.com
-                        </a>
+                            <span
+                                className="text-white-50 small"
+                            >
+                                © 2026 Apps For Green
+                            </span>
+
+                            <span
+                                className="text-white-50"
+                            >
+                                ·
+                            </span>
+
+                            <a
+                                href="https://www.apps4green.com"
+                                className="text-decoration-none small"
+                                style={{ color: "#0d6efd" }}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                www.apps4green.com
+                            </a>
+
+                        </div>
 
                     </div>
 
-                </div>
+                </footer>
 
-            </footer>
+            </div>
 
         </FinancialProvider>
 

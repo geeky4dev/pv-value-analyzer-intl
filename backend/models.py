@@ -109,6 +109,11 @@ class CreditAccount(db.Model):
         default=0
     )
 
+    balance_intl = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0
+    )
 
     updated_at = db.Column(
         db.DateTime(timezone=True),
@@ -165,6 +170,11 @@ class CreditTransaction(db.Model):
         nullable=False
     )
 
+    market = db.Column(
+        db.String(10),
+        nullable=False,
+        default="DE"
+    )
 
     created_at = db.Column(
         db.DateTime(timezone=True),

@@ -10,37 +10,29 @@ import { useNavigate } from "react-router-dom";
 
 function UserMenu() {
 
-
     const {
         user,
         profile,
         signOut
     } = useAuth();
 
-
     const {
         credits,
         loadingCredits
     } = useCredits();
 
-
-
     const [open, setOpen] = useState(false);
-
 
     const menuRef = useRef();
 
     const navigate = useNavigate();
 
 
-
-    // Cerrar menú al hacer click fuera
+    // Close menu when clicking outside
 
     useEffect(() => {
 
-
         const handleClickOutside = (event) => {
-
 
             if (
                 menuRef.current &&
@@ -51,15 +43,12 @@ function UserMenu() {
 
             }
 
-
         };
-
 
         document.addEventListener(
             "mousedown",
             handleClickOutside
         );
-
 
         return () => {
 
@@ -70,24 +59,16 @@ function UserMenu() {
 
         };
 
-
     }, []);
-
-
 
 
     const handleLogout = async () => {
 
-
         await signOut();
-
 
         setOpen(false);
 
-
     };
-
-
 
 
     return (
@@ -97,12 +78,11 @@ function UserMenu() {
             ref={menuRef}
         >
 
-
             <button
 
                 className="
                     btn 
-                    btn-light 
+                    btn-primary
                     dropdown-toggle 
                     d-flex 
                     align-items-center 
@@ -117,7 +97,6 @@ function UserMenu() {
 
                 <i className="bi bi-person-circle fs-4"></i>
 
-
                 <span>
 
                     {
@@ -128,15 +107,11 @@ function UserMenu() {
 
                 </span>
 
-
             </button>
-
-
 
 
             {
                 open && (
-
 
                     <ul
 
@@ -158,13 +133,9 @@ function UserMenu() {
 
                     >
 
-
-
                         <li>
 
-
                             <span className="dropdown-item-text">
-
 
                                 <strong>
 
@@ -175,41 +146,30 @@ function UserMenu() {
 
                                 </strong>
 
-
                                 <br />
-
 
                                 <small>
 
                                     {
                                         profile?.company ||
-                                        "Keine Firma"
+                                        "No company"
                                     }
 
                                 </small>
 
-
                             </span>
 
-
                         </li>
-
-
-
 
 
                         <li>
 
-                            <hr className="dropdown-divider"/>
+                            <hr className="dropdown-divider" />
 
                         </li>
 
 
-
-
-
                         <li>
-
 
                             <button
 
@@ -229,20 +189,14 @@ function UserMenu() {
 
                                 {" "}
 
-                                Mein Profil
-
+                                My Profile
 
                             </button>
-
 
                         </li>
 
 
-
-
-
                         <li>
-
 
                             <Link
 
@@ -258,35 +212,24 @@ function UserMenu() {
 
                                 {" "}
 
-                                Meine Reports
-
+                                My Reports
 
                             </Link>
-
 
                         </li>
 
 
-
-
-
                         <li>
-
 
                             <span className="dropdown-item-text">
 
-
                                 <i className="bi bi-credit-card"></i>
-
 
                                 {" "}
 
-
                                 Credits:
 
-
                                 <strong className="ms-2">
-
 
                                     {
 
@@ -302,21 +245,14 @@ function UserMenu() {
 
                                     }
 
-
                                 </strong>
 
-
                             </span>
-
 
                         </li>
 
 
-
-
-
                         <li>
-
 
                             <Link
 
@@ -328,39 +264,25 @@ function UserMenu() {
 
                             >
 
-
                                 <i className="bi bi-cart"></i>
-
 
                                 {" "}
 
-
-                                Credits kaufen
-
+                                Buy Credits
 
                             </Link>
 
-
                         </li>
-
-
-
 
 
                         <li>
 
-
-                            <hr className="dropdown-divider"/>
-
+                            <hr className="dropdown-divider" />
 
                         </li>
 
 
-
-
-
                         <li>
-
 
                             <button
 
@@ -373,41 +295,26 @@ function UserMenu() {
 
                             >
 
-
                                 <i className="bi bi-box-arrow-right"></i>
-
 
                                 {" "}
 
-
-                                Abmelden
-
+                                Sign Out
 
                             </button>
 
-
                         </li>
 
-
-
-
-
                     </ul>
-
 
                 )
 
             }
 
-
-
         </div>
 
     );
-
-
 }
-
 
 
 export default UserMenu;

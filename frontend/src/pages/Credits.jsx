@@ -5,10 +5,9 @@ import CreditPlans from "../components/CreditPlans";
 
 function Credits() {
 
-
     return (
 
-        <div className="container mt-4">
+        <div className="container mt-4 min-vh-100">
 
 
             {/* Header */}
@@ -16,60 +15,47 @@ function Credits() {
             <div className="d-flex justify-content-between align-items-center mb-4">
 
 
-
                 <div>
 
-                    <h3>
-                        💳 Credits kaufen
+                    <h3 className="text-primary">
+                        💳 Buy Credits
                     </h3>
 
 
-                    <p className="text-muted mb-0">
-                        Wählen Sie Ihr Credit-Paket.
+                    <p className="mb-4 text-white-50 fst-italic text-center fs-5">
+                        
+                        Choose your credit plan.
                     </p>
 
 
                 </div>
 
 
-
-
-
-                {/* Startseite Button */}
+                {/* Home Button */}
 
                 <a
-
                     href="/"
-
                     className="btn btn-primary text-white"
-
                 >
 
                     <i className="bi bi-arrow-left me-2 text-white"></i>
 
-
                     <span className="text-white">
-                        Startseite
+                        Home
                     </span>
 
-
                 </a>
-
 
 
             </div>
 
 
-
-
             <CreditPlans />
-
 
 
         </div>
 
     );
-
 
 }
 

@@ -3,37 +3,44 @@ import axios from "axios";
 import PVGISMap from "./PVGISMap";
 
 function PVGISForm({ BASE_URL, pvgisData, onChange }) {
-  // Locales para inputs controlados
   const [lat, setLat] = useState(pvgisData.latitude || "");
   const [lon, setLon] = useState(pvgisData.longitude || "");
   const [kwp, setKwp] = useState(pvgisData.anlagengroesse || "");
   const [production, setProduction] = useState(null);
   const [spezErtrag, setSpezErtrag] = useState(null);
 
-  // Sincronizar cambios locales con estado global
+  // ------------------------------------------------------------
+  // Synchronize local values with the global PVGIS data
+  // ------------------------------------------------------------
   useEffect(() => {
     if (onChange) {
       onChange({
         latitude: lat,
         longitude: lon,
-        anlagengroesse: kwp
+        anlagengroesse: kwp,
       });
     }
   }, [lat, lon, kwp]);
 
+  // ------------------------------------------------------------
+  // Update system size when it changes in the global data
+  // ------------------------------------------------------------
   useEffect(() => {
     if (pvgisData?.anlagengroesse) {
       setKwp(pvgisData.anlagengroesse);
     }
   }, [pvgisData?.anlagengroesse]);
 
+  // ------------------------------------------------------------
+  // Calculate PVGIS production
+  // ------------------------------------------------------------
   const handlePVGIS = async () => {
     const la = parseFloat(lat);
     const lo = parseFloat(lon);
     const k = parseFloat(kwp);
 
     if (isNaN(la) || isNaN(lo) || isNaN(k) || k <= 0) {
-      alert("Bitte gültige Werte eingeben!");
+      alert("Please enter valid values.");
       return;
     }
 
@@ -42,31 +49,38 @@ function PVGISForm({ BASE_URL, pvgisData, onChange }) {
         lat: la,
         lon: lo,
         kwp: k,
-        loss: 0, // <--- Forzar PVGIS a no restar el 14% (pérdidas) sino considerar el PR ingresado
+
+        // Keep PVGIS losses at 0.
+        // The Performance Ratio (PR) entered by the user
+        // is considered later in Ertragswert.jsx.
+        loss: 0,
       });
 
-      const prod = response.data.annual_production; // kWh/a
+      const prod = response.data.annual_production;
+
       setProduction(prod);
 
       const se = prod / k;
       setSpezErtrag(se);
 
       if (onChange) {
-        // ✅ KEY CORREGIDO: spezifischer_ertrag para Ertragswert
         onChange({
           latitude: la,
           longitude: lo,
           anlagengroesse: k,
           production: prod,
-          spezifischer_ertrag: se// ← FIXED!
+          spezifischer_ertrag: se,
         });
       }
     } catch (error) {
       console.error(error);
-      alert("Fehler bei PVGIS Anfrage!");
+      alert("Error while requesting PVGIS data.");
     }
   };
 
+  // ------------------------------------------------------------
+  // Handle map click
+  // ------------------------------------------------------------
   const handleMapClick = (clickedLat, clickedLon) => {
     setLat(clickedLat.toFixed(5));
     setLon(clickedLon.toFixed(5));
@@ -75,120 +89,134 @@ function PVGISForm({ BASE_URL, pvgisData, onChange }) {
   return (
     <div className="card mb-4 p-3">
 
-      {/* HEADER */}
+      {/* ========================================================
+          SECTION HEADER
+      ======================================================== */}
       <h4 className="mb-2 text-primary fw-bold">
-        5. PVGIS-Standortanalyse{" "}
+        5. Solar Resource Analysis{" "}
         <span className="badge bg-info align-middle">OPTIONAL</span>
       </h4>
 
       <p className="text-muted">
-        Automatische Berechnung von Jahresertrag und spezifischem
-        Ertrag anhand von Standortdaten.
+        Calculate estimated annual PV production and specific yield
+        based on the selected location.
       </p>
 
       <hr />
 
-      {/* STANDORT */}
+      {/* ========================================================
+          LOCATION SELECTION
+      ======================================================== */}
       <h5 className="mb-3">
-        Standort auswählen oder Koordinaten eingeben
+        Select Location or Enter Coordinates
       </h5>
 
-      {/* MAP */}
       <PVGISMap
         lat={lat}
         lon={lon}
         onClick={handleMapClick}
       />
 
-      {/* LATITUDE */}
+      {/* ========================================================
+          LATITUDE
+      ======================================================== */}
       <div className="mb-3 mt-3">
         <label className="form-label">
-          Breitengrad (Latitude)
+          Latitude
         </label>
 
         <input
           type="number"
           step="any"
           className="form-control"
-          placeholder="z.B. 48.1374"
           value={lat}
           onChange={(e) => setLat(e.target.value)}
+          placeholder="e.g. 48.1374"
         />
       </div>
 
-      {/* LONGITUDE */}
+      {/* ========================================================
+          LONGITUDE
+      ======================================================== */}
       <div className="mb-3">
         <label className="form-label">
-          Längengrad (Longitude)
+          Longitude
         </label>
 
         <input
           type="number"
           step="any"
           className="form-control"
-          placeholder="z.B. 11.5755"
           value={lon}
           onChange={(e) => setLon(e.target.value)}
+          placeholder="e.g. 11.5755"
         />
 
         <div className="form-text">
-          Koordinaten können direkt eingegeben oder über die Karte
-          ausgewählt werden.
+          Coordinates can be entered manually or selected directly
+          on the map.
         </div>
       </div>
 
       <hr />
 
-      {/* ANLAGENGRÖSSE */}
+      {/* ========================================================
+          SYSTEM SIZE
+      ======================================================== */}
       <div className="mb-3">
         <label className="form-label">
-          Anlagengröße (kWp)
+          System Size (kWp)
         </label>
 
         <input
           type="number"
           step="any"
           className="form-control"
-          placeholder="z.B. 10"
           value={kwp}
           onChange={(e) => setKwp(e.target.value)}
+          placeholder="e.g. 10"
         />
 
         <div className="form-text">
-          Automatisch aus den Anlagendaten übernommen.
+          Automatically taken from the System Information section.
         </div>
       </div>
 
-      {/* BUTTON */}
+      {/* ========================================================
+          CALCULATE BUTTON
+      ======================================================== */}
       <button
-        className="btn btn-primary mt-2"
+        type="button"
+        className="btn btn-primary"
         onClick={handlePVGIS}
       >
-        PVGIS berechnen
+        Calculate PVGIS
       </button>
 
-      {/* RESULTS */}
+      {/* ========================================================
+          PVGIS RESULTS
+      ======================================================== */}
       {production != null && (
         <div className="alert alert-success mt-4">
 
           <h5 className="mb-3">
-            PVGIS Ergebnisse
+            PVGIS Results
           </h5>
 
           <div>
-            <strong>Jährliche Produktion:</strong>{" "}
-            {production.toFixed(0)} kWh/a
+            <strong>Annual Production:</strong>{" "}
+            {production.toFixed(0)} kWh/year
           </div>
 
           {spezErtrag != null && (
             <div>
-              <strong>Spezifischer Ertrag:</strong>{" "}
-              {spezErtrag.toFixed(0)} kWh/kWp
+              <strong>Specific Yield:</strong>{" "}
+              {spezErtrag.toFixed(0)} kWh/kWp/year
             </div>
           )}
+
         </div>
       )}
-
     </div>
   );
 }

@@ -2,10 +2,11 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-// ✅ FORMATO ALEMÁN (GLOBAL)
-const formatDE = (value) => {
+// ✅ FORMATO INTERNATIONAL (GLOBAL)
+const formatUS = (value) => {
   if (value === null || value === undefined || isNaN(value)) return "-";
-  return new Intl.NumberFormat("de-DE", {
+
+  return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value);
@@ -21,19 +22,13 @@ function Buchwert({ onResult }) {
   const [buchwert, setBuchwert] = useState(null);
 
   const calculateBuchwert = async () => {
-    // ✅ FIX: soporta formato europeo (120.000, 120,000, etc.)
-    const a = parseFloat(
-      anschaffung.toString().replace(/\./g, "").replace(",", ".")
-    );
-    const al = parseFloat(
-      alter.toString().replace(",", ".")
-    );
-    const ld = parseFloat(
-      lebensdauer.toString().replace(",", ".")
-    );
+    // Parse numeric inputs
+    const a = parseFloat(anschaffung);
+    const al = parseFloat(alter);
+    const ld = parseFloat(lebensdauer);
 
     if (isNaN(a) || isNaN(al) || isNaN(ld)) {
-      alert("Bitte gültige Zahlen eingeben!");
+      alert("Please enter valid numbers!");
       return;
     }
 
@@ -43,11 +38,14 @@ function Buchwert({ onResult }) {
       let abschJ = 0;
 
       if (methode === "linear") {
-        // Abschreibung anual = Anschaffungskosten / Lebensdauer
+        // Annual depreciation = Initial Investment / Asset Lifetime
         abschJ = a / ld;
-        // Abschreibung acumulada = Abschreibung anual × Alter
-        absch = abschJ * al;
-        bw = a - absch;
+
+        // Accumulated depreciation cannot exceed the Initial Investment
+        absch = Math.min(abschJ * al, a);
+
+        // Depreciated Asset Value cannot be negative
+        bw = Math.max(a - absch, 0);
       } else if (methode === "degressiv") {
         const t = 0.2; // 20% degressivo
         bw = a;
@@ -95,16 +93,16 @@ function Buchwert({ onResult }) {
       }
     } catch (error) {
       console.error(error);
-      alert("Fehler beim Berechnen des Buchwerts!");
+      alert("Error calculating the depreciated asset value!");
     }
   };
 
   return (
     <div className="card mb-4 p-3">
-      <h4 className="text-primary fw-bold">3. Buchwert berechnen</h4>
+      <h4 className="text-primary fw-bold">3. Depreciated Asset Value</h4>
 
       <div className="mb-2">
-        <label>Anschaffungskosten / Investitionskosten (CAPEX) z.B. 50000 €:</label>
+        <label>Initial Investment / CAPEX (USD): e.g. $30,000</label>
         <input
           type="number"
           className="form-control"
@@ -114,18 +112,18 @@ function Buchwert({ onResult }) {
       </div>
 
       <div className="mb-2">
-        <label>Alter der PV-Anlage (Jahre):</label>
+        <label>Asset Age (years):</label>
         <input
           type="text"
           className="form-control"
           value={alter}
           onChange={(e) => setAlter(e.target.value)}
-          placeholder="z.B. 8,5"
+          placeholder="e.g. 8.5"
         />
       </div>
 
       <div className="mb-2">
-        <label>Geschätzte Lebensdauer (Jahre) – Standard 25–30:</label>
+        <label>Expected Asset Lifetime (years): e.g. 25</label>
         <input
           type="number"
           className="form-control"
@@ -135,41 +133,41 @@ function Buchwert({ onResult }) {
       </div>
 
       <div className="mb-2">
-        <label>Abschreibungsmethode auswählen:</label>
+        <label>Depreciation Method:</label>
         <select
           className="form-select"
           value={methode}
           onChange={(e) => setMethode(e.target.value)}
         >
-          <option value="linear">Linear</option>
-          <option value="degressiv">Degressiv</option>
+          <option value="linear">Straight-line</option>
+          <option value="degressiv">Declining-balance</option>
         </select>
       </div>
 
       <button className="btn btn-primary mt-2" onClick={calculateBuchwert}>
-        Berechnen
+        Calculate
       </button>
 
       {abschreibung !== null && buchwert !== null && (
         <div className="alert alert-success mt-3">
-          <h5>Ergebnis</h5>
+          <h5>Result</h5>
 
           <p className="mb-1">
-            <strong>Abschreibung pro Jahr:</strong>{" "}
-            {formatDE(abschreibungJahr)} €
+            <strong>Annual Depreciation:</strong>{" "}
+            ${formatUS(abschreibungJahr)}
           </p>
 
           <p className="mb-1">
-            <strong>Kumulierte Abschreibung:</strong>{" "}
-            {formatDE(abschreibung)} €
+            <strong>Accumulated Depreciation:</strong>{" "}
+            ${formatUS(abschreibung)}
           </p>
 
           <hr />
 
           <p className="mb-0 fs-5">
-            <strong>Buchwert:</strong>{" "}
+            <strong>Depreciated Asset Value:</strong>{" "}
             <span className="fw-bold text-success">
-              {formatDE(buchwert)} €
+              ${formatUS(buchwert)}
             </span>
           </p>
         </div>

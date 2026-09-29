@@ -87,21 +87,21 @@ if not STRIPE_WEBHOOK_SECRET:
 # STRIPE PRODUCTS / CREDIT PACKAGES
 # ======================================================
 
-STRIPE_PRODUCTS = {
+STRIPE_PRODUCTS_INTL = {
     "starter": {
-        "price_id": "price_1U5RRBLrbrHMdmYwia1MY6bJ",
+        "price_id": "price_1UKkUlLrbrHMdmYw6wbnErY5",
         "credits": 10
     },
     "professional": {
-        "price_id": "price_1U5RalLrbrHMdmYwwjbpNWK1",
+        "price_id": "price_1UKkj2LrbrHMdmYw27S2yunS",
         "credits": 25
     },
     "expert": {
-        "price_id": "price_1U5RfHLrbrHMdmYwEOURTomw",
+        "price_id": "price_1UKkkOLrbrHMdmYwSkFGocpm",
         "credits": 50
     },
     "business": {
-        "price_id": "price_1U5RhtLrbrHMdmYwHespkzCH",
+        "price_id": "price_1UKklqLrbrHMdmYwp8tTUTwV",
         "credits": 100
     }
 }
@@ -188,7 +188,7 @@ def get_credits(email):
         })
 
     return jsonify({
-        "balance": account.balance
+        "balance": account.balance_intl
     })
 
 
@@ -322,7 +322,7 @@ def create_user_if_not_exists(
 
         account = CreditAccount(
             user_id=user.id,
-            balance=1
+            balance_intl=1
         )
 
 
@@ -336,7 +336,9 @@ def create_user_if_not_exists(
 
             type="WELCOME_CREDIT",
 
-            amount=1
+            amount=1,
+
+            market="INTL"
 
         )
 
@@ -377,7 +379,7 @@ def check_credit_available(user):
 
 
 
-    if account.balance <= 0:
+    if account.balance_intl <= 0:
 
         raise Exception(
             "Keine verfügbaren Credits"
@@ -406,7 +408,7 @@ def consume_credit(
             )
 
 
-        if account.balance <= 0:
+        if account.balance_intl <= 0:
 
             raise Exception(
                 "Keine verfügbaren Credits"
@@ -414,7 +416,7 @@ def consume_credit(
 
 
 
-        account.balance -= 1
+        account.balance_intl -= 1
 
 
 
@@ -424,7 +426,9 @@ def consume_credit(
 
             type=credit_type,
 
-            amount=-1
+            amount=-1,
+
+            market="INTL"
 
         )
 
@@ -473,7 +477,7 @@ def add_credit(
 
 
 
-        account.balance += credits
+        account.balance_intl += credits
 
 
 
@@ -483,7 +487,9 @@ def add_credit(
 
             type=credit_type,
 
-            amount=credits
+            amount=credits,
+
+            market="INTL"
 
         )
 
@@ -570,7 +576,7 @@ def create_checkout_session():
         )
 
 
-        if package_key not in STRIPE_PRODUCTS:
+        if package_key not in STRIPE_PRODUCTS_INTL:
 
             return jsonify({
                 "error": "Invalid credit package"
@@ -626,7 +632,7 @@ def create_checkout_session():
         # OBTENER CONFIGURACIÓN DEL PAQUETE
         # ==============================================
 
-        product = STRIPE_PRODUCTS[
+        product = STRIPE_PRODUCTS_INTL[
             package_key
         ]
 
@@ -1155,7 +1161,7 @@ def sync_user():
             ),
 
             "balance": (
-                user.credit_account.balance
+                user.credit_account.balance_intl
                 if user.credit_account
                 else 0
             )
@@ -1354,6 +1360,9 @@ def get_eeg_data(bm, kwp):
 # ======================================================
 # PDF GUTACHTEN DIN 5008
 # ======================================================
+# ======================================================
+# INTERNATIONAL PROFESSIONAL PV VALUATION REPORT
+# ======================================================
 @app.route("/pdf", methods=["POST"])
 def pdf():
 
@@ -1366,22 +1375,13 @@ def pdf():
         # ======================================================
 
         email = data.get("user_email")
-
         supabase_user_id = data.get("user_id")
 
-
         if not email:
-            return jsonify({
-                "error": "User email required"
-            }), 400
-
+            return jsonify({"error": "User email required"}), 400
 
         if not supabase_user_id:
-            return jsonify({
-                "error": "Supabase user id required"
-            }), 400
-
-
+            return jsonify({"error": "Supabase user id required"}), 400
 
         user = create_user_if_not_exists(
             supabase_user_id=supabase_user_id,
@@ -1391,24 +1391,17 @@ def pdf():
         )
 
         print("========== CREDIT DEBUG ==========")
-
         print("USER ID:", user.id)
         print("USER EMAIL:", user.email)
 
-        account = CreditAccount.query.filter_by(
-            user_id=user.id
-        ).first()
-
+        account = CreditAccount.query.filter_by(user_id=user.id).first()
         print("CREDIT ACCOUNT:", account)
-
         if account:
-            print("BALANCE:", account.balance)
-
+            print("BALANCE INTL:", account.balance_intl)
         print("==================================")
 
         try:
             check_credit_available(user)
-
         except Exception as e:
             return jsonify({
                 "error": str(e),
@@ -1416,108 +1409,389 @@ def pdf():
             }), 402
 
         # ======================================================
-        # LCOE CALCULATION
+        # DATA SOURCES
         # ======================================================
 
-        ertrag = data.get("ertragswertData", {})
-        buch = data.get("buchwertData", {})
-        
-        try:
-            pr_input = float(ertrag.get("performance_ratio", 100))
-        except:
-            pr_input = 100.0
+        sach = data.get("sachverstaendiger", {}) or {}
+        ag = data.get("auftraggeber", {}) or {}
+        anlage = data.get("anlagendaten", {}) or {}
+        buch = data.get("buchwertData", {}) or {}
+        ertrag = data.get("ertragswertData", {}) or {}
+        rest = data.get("restwertData", {}) or {}
+        pvgis = data.get("pvgisData", {}) or {}
 
-        pr = pr_input / 100
+        document_id = data.get("document_id") or f"PV-{datetime.date.today().year}-001"
 
-        try:
-            capex = float(buch.get("anschaffung", 0))
-        except:
-            capex = 0
+        # ======================================================
+        # SAFE NUMERIC HELPERS
+        # ======================================================
 
-        try:
-            opex_anual = float(ertrag.get("opex", 0))
-        except:
-            opex_anual = 0
+        def num(value, default=0.0):
+            try:
+                if value is None or str(value).strip() == "":
+                    return float(default)
+                return float(str(value).replace(",", ".").replace("%", "").strip())
+            except Exception:
+                return float(default)
 
-        try:
-            restlaufzeit = float(ertrag.get("restlaufzeit", 0))
-        except:
-            restlaufzeit = 0
+        def fmt_num(value, decimals=2):
+            try:
+                return f"{num(value):,.{decimals}f}"
+            except Exception:
+                return f"{0:.{decimals}f}"
 
-        try:
-            jahresproduktion = float(
-                ertrag.get("jahresertrag")
-                or data.get("pvgisData", {}).get("annual_production")
-                or 0
+        def usd(value):
+            return f"${num(value):,.2f}"
+
+        def pct(value, decimals=2):
+            return f"{num(value):,.{decimals}f}%"
+
+        def normalize_text(value):
+            text = str(value or "").strip().lower()
+            return (
+                text.replace("ä", "ae")
+                    .replace("ö", "oe")
+                    .replace("ü", "ue")
+                    .replace("ß", "ss")
             )
-        except:
-            jahresproduktion = 0
+
+        def clean_display(value, fallback="-"):
+            if value is None:
+                return fallback
+            text = str(value).strip()
+            if not text:
+                return fallback
+
+            # Common German source values are translated here only for
+            # presentation in the INTL PDF. Internal database values remain unchanged.
+            normalized = normalize_text(text)
+            generic_map = {
+                "nichts": "None reported",
+                "keine": "None reported",
+                "keine probleme": "None reported",
+                "keine bekannten probleme": "None reported",
+                "keine angaben": "Not specified",
+                "nicht angegeben": "Not specified",
+                "unbekannt": "Not specified",
+                "n.a.": "n.a.",
+            }
+            return generic_map.get(normalized, text)
+
+        def translate_value(value, mapping, fallback="-"):
+            text = clean_display(value, fallback)
+            if text == fallback:
+                return fallback
+            normalized = normalize_text(text)
+            return mapping.get(normalized, text)
+
+        installation_type_map = {
+            "schraegdach": "Pitched Roof",
+            "schraeg dach": "Pitched Roof",
+            "flachdach": "Flat Roof",
+            "freiflaeche": "Ground-mounted",
+            "freiflaechenanlage": "Ground-mounted",
+            "bodenmontage": "Ground-mounted",
+            "carport": "Carport",
+            "fassade": "Facade",
+        }
+
+        module_technology_map = {
+            "monokristallin": "Monocrystalline",
+            "polykristallin": "Polycrystalline",
+            "duennschicht": "Thin-film",
+            "bifazial": "Bifacial",
+        }
+
+        inverter_type_map = {
+            "stringwechselrichter": "String Inverter",
+            "zentralwechselrichter": "Central Inverter",
+            "modulwechselrichter": "Module Inverter",
+            "mikrowechselrichter": "Microinverter",
+            "hybridwechselrichter": "Hybrid Inverter",
+            "inselwechselrichter": "Off-grid Inverter",
+        }
+
+        state_region_map = {
+            "bayern": "Bavaria",
+            "baden-wuerttemberg": "Baden-Württemberg",
+            "baden-wurttemberg": "Baden-Württemberg",
+            "berlin": "Berlin",
+            "brandenburg": "Brandenburg",
+            "bremen": "Bremen",
+            "hamburg": "Hamburg",
+            "hessen": "Hesse",
+            "mecklenburg-vorpommern": "Mecklenburg-Western Pomerania",
+            "niedersachsen": "Lower Saxony",
+            "nordrhein-westfalen": "North Rhine-Westphalia",
+            "rheinland-pfalz": "Rhineland-Palatinate",
+            "saarland": "Saarland",
+            "sachsen": "Saxony",
+            "sachsen-anhalt": "Saxony-Anhalt",
+            "schleswig-holstein": "Schleswig-Holstein",
+            "thueringen": "Thuringia",
+            "thüringen": "Thuringia",
+        }
+
+        def english_name(value, fallback=""):
+            text = str(value or "").strip()
+            if not text:
+                return fallback
+            normalized = normalize_text(text)
+            if normalized.startswith("herr "):
+                return "Mr. " + text[5:].strip()
+            if normalized.startswith("frau "):
+                return "Ms. " + text[5:].strip()
+            return text
+
+        def english_salutation(value):
+            name = str(value or "").strip()
+            if not name:
+                return "Dear Sir or Madam,"
+            normalized = normalize_text(name)
+            if normalized.startswith("herr "):
+                return f"Dear Mr. {name[5:].strip()},"
+            if normalized.startswith("frau "):
+                return f"Dear Ms. {name[5:].strip()},"
+            return f"Dear {name},"
+
+        def yes_no(value):
+            if isinstance(value, bool):
+                return "Yes" if value else "No"
+            text = str(value or "").strip().lower()
+            if text in {"ja", "yes", "true", "1"}:
+                return "Yes"
+            if text in {"nein", "no", "false", "0"}:
+                return "No"
+            return clean_display(value)
+
+        def condition_label(value):
+            mapping = {
+                "sehr gut": "Very Good",
+                "gut": "Good",
+                "durchschnittlich": "Average",
+                "mittel": "Average",
+                "schlecht": "Poor",
+                "poor": "Poor",
+                "good": "Good",
+                "average": "Average",
+                "very good": "Very Good",
+                "ausgezeichnet": "Excellent",
+                "excellent": "Excellent",
+            }
+            return mapping.get(str(value or "").strip().lower(), clean_display(value, "Not specified"))
+
+        def operating_model_label(value):
+            raw = str(value or "").strip().lower()
+            normalized = (
+                raw.replace(" ", "")
+                .replace("/", "")
+                .replace("+", "")
+                .replace("ä", "ae")
+                .replace("ö", "oe")
+                .replace("ü", "ue")
+            )
+            mapping = {
+                "volleinspeisung": "Full Grid Export (100%)",
+                "eigenverbrauch": "Self-consumption + Grid Export",
+                "eigenverbrauch_batterie": "Self-consumption + Battery (BESS)",
+                "mieterstrom": "Tenant Electricity Model",
+                "direktvermarktung": "Direct Marketing",
+            }
+            return mapping.get(normalized, clean_display(value, "Not specified"))
+
+        def write_line(label, value, bold_label=False):
+            if bold_label:
+                pdf.set_font("DejaVu", "B", 10)
+                pdf.write(6, f"{label}: ")
+                pdf.set_font("DejaVu", "", 10)
+                pdf.write(6, clean_display(value))
+                pdf.ln(6)
+            else:
+                pdf.cell(0, 6, f"- {label}: {clean_display(value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # ======================================================
+        # LCOE / CORE CALCULATION DATA
+        # ======================================================
+
+        pr_input = num(ertrag.get("performance_ratio"), 100.0)
+        capex = num(buch.get("anschaffung"), 0.0)
+        opex_anual = num(ertrag.get("opex"), 0.0)
+        restlaufzeit = num(ertrag.get("restlaufzeit"), 0.0)
+
+        jahresproduktion = num(
+            ertrag.get("production")
+            or ertrag.get("jahresertrag")
+            or pvgis.get("production")
+            or pvgis.get("annual_production"),
+            0.0
+        )
 
         total_costs = capex + (opex_anual * restlaufzeit)
-
         total_energy = jahresproduktion * restlaufzeit
+        lcoe = total_costs / total_energy if total_energy > 0 else 0.0
 
-        lcoe = 0
+        # ======================================================
+        # RESULT VALUES
+        # ======================================================
 
-        if total_energy > 0:
-            lcoe = total_costs / total_energy
+        npv = num(ertrag.get("npv"), 0.0)
+        irr = num(ertrag.get("irr"), 0.0)
+        payback = ertrag.get("payback")
 
+        book_value = num(buch.get("buchwert"), 0.0)
+        annual_depreciation = num(buch.get("abschreibungJahr"), 0.0)
+        accumulated_depreciation = num(buch.get("abschreibung"), 0.0)
+        asset_age = num(buch.get("alter"), 0.0)
+        asset_lifetime = num(buch.get("lebensdauer"), 0.0)
 
-        document_id = data.get("document_id") or "PV-2026-001"
+        pv_economic_value = num(
+            ertrag.get("ertragswertKumuliert")
+            or ertrag.get("ertragswert")
+            or ertrag.get("cumulativeEconomicValue"),
+            0.0
+        )
 
-        def fmt_eu(v, unit=""):
-            try:
-                val = float(v)
-                formatted = f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-                return f"{formatted}{unit}"
-            except:
-                return f"0,00{unit}"
+        annual_gross_revenue = num(
+            ertrag.get("jahresertrag")
+            or ertrag.get("annualGrossRevenue"),
+            0.0
+        )
 
-        def eur(v):
-            return fmt_eu(v, " €")
+        average_annual_net_value = num(
+            ertrag.get("ertragswertJahr")
+            or ertrag.get("annualNetValue"),
+            0.0
+        )
+        if average_annual_net_value == 0 and restlaufzeit > 0 and pv_economic_value != 0:
+            average_annual_net_value = pv_economic_value / restlaufzeit
+
+        residual_value = num(rest.get("restwert"), 0.0)
+        future_earnings = num(rest.get("zukuenftige_gewinne"), 0.0)
+        cost_discount = num(rest.get("kostenabschlag"), 0.0)
+        sale_discount = num(rest.get("verkaufsabschlag"), 0.0)
+        market_factor = num(rest.get("marktfaktor"), 100.0)
+
+        # ======================================================
+        # PRODUCTION / LOCATION DATA
+        # ======================================================
+
+        production = (
+            ertrag.get("production")
+            or ertrag.get("jahresertrag")
+            or pvgis.get("production")
+            or pvgis.get("annual_production")
+            or data.get("production")
+        )
+
+        production_value = num(production, 0.0)
+        specific_yield = num(
+            ertrag.get("spezifischer_ertrag")
+            or pvgis.get("specific_yield")
+            or pvgis.get("specificYield"),
+            0.0
+        )
+
+        if specific_yield == 0 and num(anlage.get("kwp"), 0) > 0 and production_value > 0:
+            specific_yield = production_value / num(anlage.get("kwp"), 1)
+
+        latitude = num(anlage.get("breitengrad"), 0.0)
+        longitude = num(anlage.get("langengrad"), 0.0)
+
+        # ======================================================
+        # OPERATING MODEL / SELF-CONSUMPTION
+        # ======================================================
+
+        operating_model_raw = (
+            anlage.get("betriebsmodell")
+            or ertrag.get("betriebsmodell")
+            or data.get("betriebsmodell")
+        )
+        operating_model = operating_model_label(operating_model_raw)
+
+        eigen = num(ertrag.get("eigenverbrauch_anteil"), 0.0)
+        if eigen <= 1:
+            eigen *= 100
+        eigen = max(0.0, min(eigen, 100.0))
+
+        if str(operating_model_raw or "").strip().lower() == "volleinspeisung":
+            eigen = 0.0
+
+        battery_losses = num(ertrag.get("batterie_verluste"), 0.0)
+        battery_losses = max(0.0, min(battery_losses, 100.0))
+        grid_export_share = max(0.0, 100.0 - eigen - battery_losses)
+
+        # ======================================================
+        # PDF CLASS
+        # ======================================================
 
         class MyPDF(FPDF):
+            # Keep the cursor at the left margin after every multi_cell.
+            # This prevents FPDF2 errors when width=0 is used after another multi_cell.
+            def multi_cell(self, *args, **kwargs):
+                # FPDF2 keeps the cursor at the right edge after multi_cell()
+                # unless new_x/new_y are specified. Always return to the left
+                # margin so a following multi_cell(width=0) has usable width.
+                kwargs.setdefault("new_x", XPos.LMARGIN)
+                kwargs.setdefault("new_y", YPos.NEXT)
+                return super().multi_cell(*args, **kwargs)
+
             def header(self):
-                if getattr(self, "is_deckblatt", False):
+                if getattr(self, "is_cover", False):
                     return
                 self.set_y(10)
                 self.set_font("DejaVu", "B", 15)
-                self.cell(0, 8, "PV-WIRTSCHAFTLICHKEITSANALYSE", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="L")
+                self.cell(
+                    0,
+                    8,
+                    "PV-VALUATION REPORT",
+                    new_x=XPos.LMARGIN,
+                    new_y=YPos.NEXT,
+                    align="L"
+                )
 
             def footer(self):
-                if getattr(self, "is_deckblatt", False):
+                if getattr(self, "is_cover", False):
                     return
+
                 self.set_draw_color(200, 200, 200)
                 self.line(self.l_margin, 20, self.w - self.r_margin, 20)
 
                 if self.page_no() > 1:
-                    sach = getattr(self, "sachverstaendiger", {})
-                    raw_name = sach.get("firma") or sach.get("name") or ""
-                    if "/" in raw_name:
-                        firma = raw_name.split("/")[-1].strip()
-                    else:
-                        firma = raw_name.strip()
-
-                    adresse = sach.get("adresse", "")
-                    plz_ort = sach.get("plz_ort", "")
-                    phone = sach.get("phone", "")
-                    email = sach.get("email", "")
-                    website = sach.get("website", "")
+                    analyst = getattr(self, "sachverstaendiger", {}) or {}
+                    firm = clean_sach_name(
+                        analyst.get("firma") or analyst.get("name") or ""
+                    )
+                    address = analyst.get("adresse", "")
+                    city = analyst.get("plz_ort", "")
+                    website = analyst.get("website", "")
+                    email_value = analyst.get("email", "")
 
                     self.set_y(-20)
                     self.set_font("DejaVu", "", 8)
                     self.set_text_color(120, 120, 120)
 
-                    linea1 = " · ".join([x for x in [firma, adresse, plz_ort, website, email] if x])
-                    self.multi_cell(0, 4, linea1, align="C")
+                    line = " · ".join(
+                        [
+                            str(x).strip()
+                            for x in [firm, address, city, website, email_value]
+                            if str(x).strip()
+                        ]
+                    )
+                    if line:
+                        self.multi_cell(0, 4, line, align="C")
 
-                self.set_y(-18)
+                self.set_y(-10)
                 self.set_font("DejaVu", "", 8)
-                self.cell(0, 10, f"Seite {self.page_no()} von {{nb}}", align="C")
+                self.cell(
+                    0,
+                    6,
+                    f"Page {self.page_no()} of {{nb}}",
+                    align="C"
+                )
 
         pdf = MyPDF()
-        pdf.sachverstaendiger = data.get("sachverstaendiger", {})
-        pdf.is_deckblatt = True
+        pdf.sachverstaendiger = sach
+        pdf.is_cover = True
 
         pdf.add_font("DejaVu", "", FONT_PATH, uni=True)
         pdf.add_font("DejaVu", "B", FONT_PATH_BOLD, uni=True)
@@ -1526,1119 +1800,866 @@ def pdf():
         pdf.set_left_margin(20)
         pdf.set_right_margin(20)
 
+        # ======================================================
+        # COVER PAGE
+        # ======================================================
+
         pdf.add_page()
         pdf.set_font("DejaVu", "", 11)
 
         pdf.set_font("DejaVu", "B", 20)
-        pdf.cell(0, 10, "PV-Wirtschaftlichkeitsanalyse", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+        pdf.cell(
+            0,
+            10,
+            "Professional PV Valuation Report",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+            align="C"
+        )
         pdf.ln(4)
 
         pdf.set_font("DejaVu", "", 14)
-        pdf.cell(0, 8, "Technischer Bewertungsbericht für Photovoltaikanlagen", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+        pdf.cell(
+            0,
+            8,
+            "Technical and Financial Analysis of a Photovoltaic System",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+            align="C"
+        )
         pdf.ln(10)
 
-        sach = data.get("sachverstaendiger", {})
-        ag = data.get("auftraggeber", {})
-        anlage = data.get("anlagendaten", {})
-
-        print("========== DEBUG SACHVERSTAENDIGER ==========")
-        print("SACH:", sach)
-        print("PLZ_ORT:", repr(sach.get("plz_ort", "")))
-        print("==============================================")
-
-
         logo = sach.get("logo")
-        logo_height = 0
-
+        logo_path = None
         if logo:
             try:
                 if "," in logo:
-                    logo = logo.split(",")[1]
+                    logo = logo.split(",", 1)[1]
                 img_data = base64.b64decode(logo)
                 logo_path = os.path.join(TEMP_DIR, f"logo_{uuid.uuid4().hex}.png")
                 with open(logo_path, "wb") as f:
                     f.write(img_data)
                 pdf.image(logo_path, x=pdf.l_margin, y=40, w=25)
-                logo_height = 35 * 0.8
             except Exception as e:
-                print("Error al cargar el logo:", e)
-        else:
-            logo_path = None
+                print("Logo error:", e)
 
-        pdf.set_y(20 + logo_height + 10)
-        pdf.ln(10)
-
-        # ======================================================
-        # ANSCHRIFT SACHVERSTÄNDIGER
-        # ======================================================
-
+        pdf.set_y(85)
         pdf.set_font("DejaVu", "B", 11)
-
-        name_only = sach.get("name", "").split("/")[0].strip()
-
-        pdf.cell(
-            0,
-            6,
-            name_only,
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT
-        )
+        analyst_name = english_name(sach.get("name") or sach.get("firma") or "")
+        if analyst_name:
+            pdf.cell(0, 6, analyst_name, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         pdf.set_font("DejaVu", "", 10)
+        for value in [sach.get("adresse", ""), sach.get("plz_ort", "")]:
+            if str(value).strip():
+                pdf.cell(0, 6, str(value).strip(), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        # Straße
-        pdf.cell(
-            0,
-            6,
-            sach.get("adresse", "").strip(),
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT
-        )
-
-        # PLZ + Ort
-        plz_ort_sach = sach.get("plz_ort", "").strip()
-
-        if plz_ort_sach:
-            pdf.cell(
-                0,
-                6,
-                plz_ort_sach,
-                new_x=XPos.LMARGIN,
-                new_y=YPos.NEXT
-            )
-
-        # Telefon
-        pdf.cell(
-            0,
-            6,
-            f"Telefon: {sach.get('phone', '')}",
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT
-        )
-
-        # E-Mail
-        pdf.cell(
-            0,
-            6,
-            f"E-Mail: {sach.get('email', '')}",
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT
-        )
-
-        # Web
-        website = sach.get("website", "").strip()
-
-        pdf.cell(
-            0,
-            6,
-            f"Web: {website}",
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT
-        )
-
-        pdf.ln(14)
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, ag.get("name",""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, ag.get("adresse",""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, ag.get("plz_ort",""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if sach.get("phone"):
+            pdf.cell(0, 6, f"Phone: {sach.get('phone')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if sach.get("email"):
+            pdf.cell(0, 6, f"Email: {sach.get('email')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if sach.get("website"):
+            pdf.cell(0, 6, f"Web: {sach.get('website')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         pdf.ln(12)
 
-        # ======================================================
-        # ORT UND DATUM - DECKBLATT
-        # ======================================================
+        if ag.get("name"):
+            pdf.set_font("DejaVu", "B", 11)
+            pdf.cell(0, 6, english_name(ag.get("name")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font("DejaVu", "", 10)
+            for value in [ag.get("adresse", ""), ag.get("plz_ort", "")]:
+                if str(value).strip():
+                    pdf.cell(0, 6, str(value).strip(), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        datum = datetime.date.today().strftime("%d.%m.%Y")
+        pdf.ln(10)
 
-        plz_ort = str(
-            sach.get("plz_ort", "") or ""
-        ).strip()
+        datum = datetime.date.today().strftime("%B %d, %Y")
+        analyst_city = str(sach.get("ort") or sach.get("city") or "").strip()
+        if not analyst_city:
+            raw_plz_ort = str(sach.get("plz_ort") or "").strip()
+            if re.match(r"^\s*\d{4,10}\s+", raw_plz_ort):
+                analyst_city = re.sub(r"^\s*\d{4,10}\s+", "", raw_plz_ort).strip()
+            else:
+                analyst_city = raw_plz_ort
 
-        ort_final = ""
-
-        if plz_ort:
-            # "80634 München" -> "München"
-            ort_final = re.sub(
-                r"^\s*\d{5}\s*",
-                "",
-                plz_ort
-            ).strip()
-
-        ort_text = (
-            f"{ort_final}, {datum}"
-            if ort_final
-            else datum
-        )
-
+        location_date = f"{analyst_city}, {datum}" if analyst_city else datum
         pdf.set_font("DejaVu", "", 10)
-
-        pdf.cell(
-            0,
-            6,
-            ort_text,
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT,
-            align="R"
-        )
-
+        pdf.cell(0, 6, location_date, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="R")
         pdf.ln(8)
-
-        # ======================================================
-        # LINIE
-        # ======================================================
 
         pdf.set_draw_color(180, 180, 180)
         y_line = pdf.get_y()
-
-        pdf.line(
-            pdf.l_margin,
-            y_line,
-            pdf.w - pdf.r_margin,
-            y_line
-        )
-
-        pdf.ln(4)
-
-        betreff1 = "Wirtschaftlichkeitsanalyse der Photovoltaikanlage"
-        betreff2 = f"am Standort {anlage.get('adresse','')}, {anlage.get('plz','')} {anlage.get('ort','')}"
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, betreff1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, betreff2, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.ln(12)
-
-        kunde = ag.get("name","").lower()
-        if kunde.startswith("frau"):
-            anrede = f"Sehr geehrte {ag.get('name','')},"
-        elif kunde.startswith("herr"):
-            anrede = f"Sehr geehrter {ag.get('name','')},"
-        else:
-            anrede = "Sehr geehrte Damen und Herren,"
-
-        pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, anrede, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
+        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
         pdf.ln(6)
 
-        einleitung = (
-            "anbei erhalten Sie den technischen Bewertungsbericht zur oben genannten "
-            "Photovoltaikanlage. Der Bericht wurde gemäß den formalen Vorgaben der "
-            "DIN 5008 erstellt und enthält sämtliche technischen, wirtschaftlichen sowie "
-            "bewertungsspezifischen Informationen."
-        )
-        pdf.multi_cell(0, 6, einleitung, align="L")
+        system_location = ", ".join(
+            [
+                str(anlage.get("adresse", "")).strip(),
+                str(anlage.get("plz", "")).strip(),
+                str(anlage.get("ort", "")).strip(),
+                translate_value(anlage.get("bundesland", ""), state_region_map, ""),
+            ]
+        ).replace(", ,", ",").strip(" ,")
+
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "PV Valuation Analysis of the Photovoltaic System", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if system_location:
+            pdf.set_font("DejaVu", "", 10)
+            pdf.multi_cell(0, 6, f"at the location {system_location}", align="L")
 
         pdf.ln(8)
         pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, "Mit freundlichen Grüßen", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, english_salutation(ag.get("name")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.ln(6)
 
+        pdf.multi_cell(
+            0,
+            6,
+            "Please find attached the professional valuation report for the photovoltaic system referred to above. The report contains the technical, economic and valuation-related information generated from the data and assumptions entered into PV-Valuator.",
+            align="L"
+        )
+
+        pdf.ln(8)
+        pdf.cell(0, 6, "Sincerely,", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        cover_signature_path = None
         signature = sach.get("signature")
-        signature_path = None
-        sig_y = pdf.get_y()
-
         if signature:
             try:
                 if "," in signature:
-                    signature = signature.split(",")[1]
+                    signature = signature.split(",", 1)[1]
                 sig_data = base64.b64decode(signature)
-                signature_path = os.path.join(TEMP_DIR, f"deckblatt_signature_{uuid.uuid4().hex}.png")
-                with open(signature_path, "wb") as f:
+                cover_signature_path = os.path.join(TEMP_DIR, f"cover_signature_{uuid.uuid4().hex}.png")
+                with open(cover_signature_path, "wb") as f:
                     f.write(sig_data)
-                pdf.image(signature_path, x=pdf.l_margin, y=sig_y, h=25)
+                pdf.image(cover_signature_path, x=pdf.l_margin, y=pdf.get_y(), h=25)
+                pdf.set_y(pdf.get_y() + 25)
             except Exception as e:
-                print("Deckblatt signature error:", e)
+                print("Cover signature error:", e)
 
-        pdf.set_xy(pdf.l_margin, sig_y + 25)
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, clean_sach_name(sach.get("name") or sach.get("firma") or ""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, analyst_name, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        if signature_path and os.path.exists(signature_path):
-            os.remove(signature_path)
+        if cover_signature_path and os.path.exists(cover_signature_path):
+            os.remove(cover_signature_path)
 
-        pdf.is_deckblatt = False
+        # ======================================================
+        # SUMMARY / OVERALL ASSESSMENT
+        # ======================================================
+
+        pdf.is_cover = False
         pdf.add_page()
+        pdf.ln(10)
 
-        # ---------------- ZUSAMMENFASSUNG DER BEWERTUNG ----------------
-        ertrag = data.get("ertragswertData", {})
-        rest = data.get("restwertData", {})
-        anlage = data.get("anlagendaten", {})
-
-        try:
-            npv = float(ertrag.get("npv", 0))
-        except:
-            npv = 0
-
-        try:
-            irr = float(ertrag.get("irr", 0))
-        except:
-            irr = 0
-
-        payback = ertrag.get("payback", "-")
-        restwert = rest.get("restwert", 0)
-
+        # Keep the original German rating logic and visual color coding,
+        # translated for the international report. This preserves the
+        # assessment functionality without changing any calculation.
         if npv > 5000 and irr >= 8:
-            rating = "A – Sehr wirtschaftlich"
+            rating = "A – Highly Economically Viable"
             rating_color = (46, 125, 50)
         elif npv > 0 and irr >= 5:
-            rating = "B – Wirtschaftlich"
+            rating = "B – Economically Viable"
             rating_color = (85, 139, 47)
         elif npv > -5000:
-            rating = "C – Eingeschränkte Wirtschaftlichkeit"
+            rating = "C – Limited Economic Viability"
             rating_color = (249, 168, 37)
         else:
-            rating = "D – Kritische Wirtschaftlichkeit"
+            rating = "D – Critical Economic Viability"
             rating_color = (198, 40, 40)
 
-        col_width_1 = 80
-        col_width_2 = 80
-        ancho_total_tabla = col_width_1 + col_width_2
-        start_x = (pdf.w - ancho_total_tabla) / 2
+        payback_numeric = None
+        try:
+            if payback not in [None, "", "-"] and str(payback).strip().lower() not in {"n.a.", "na", "n/a"}:
+                payback_numeric = num(payback, 0)
+        except Exception:
+            payback_numeric = None
 
-        pdf.ln(10)
         pdf.set_font("DejaVu", "B", 18)
-        pdf.cell(0, 10, "Zusammenfassung der Bewertung", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
-        pdf.ln(10)
+        pdf.cell(
+            0,
+            10,
+            "Executive Summary",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+            align="C"
+        )
+        pdf.ln(8)
 
-        pdf.set_x(start_x)
+        # Overall assessment banner – same visual treatment as the German PDF.
+        assessment_width = 160
+        assessment_x = (pdf.w - assessment_width) / 2
+        pdf.set_x(assessment_x)
         pdf.set_fill_color(*rating_color)
         pdf.set_text_color(255, 255, 255)
         pdf.set_font("DejaVu", "B", 14)
-        pdf.cell(ancho_total_tabla, 12, f"Gesamtbewertung: {rating}", border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C", fill=True)
-
+        pdf.cell(
+            assessment_width,
+            12,
+            f"Overall Assessment: {rating}",
+            border=0,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+            align="C",
+            fill=True
+        )
         pdf.set_text_color(0, 0, 0)
         pdf.ln(10)
 
+        # Preserve the full assessment table from the German version,
+        # translated into English and retaining the same information level.
+        economic_assessment = "Limited" if npv < 0 else "Economically Viable"
+        return_assessment = "Low–Moderate" if irr < 5 else "Good"
+
         summary_rows = [
-            ("Wirtschaftlichkeit", "Eingeschränkt" if npv < 0 else "Wirtschaftlich"),
-            ("Technischer Zustand", "Gut"),
-            ("Investitionsrisiko", "Mittel"),
-            ("Renditepotenzial", "Niedrig-Mittel" if irr < 5 else "Gut"),
-            ("Amortisationsdauer", f"{payback} Jahre"),
-            ("Kapitalwert (NPV)", f"{npv:,.2f} €"),
-            ("Interne Rendite (IRR)", f"{irr:.2f} %"),
-            ("Restwert", f"{restwert:,.2f} €"),
+            ("Economic Performance", economic_assessment),
+            ("Technical Condition", condition_label(anlage.get("zustand") or "Gut")),
+            ("Investment Risk", "Moderate"),
+            ("Return Potential", return_assessment),
+            ("Payback Period", f"{fmt_num(payback_numeric, 0)} years" if payback_numeric is not None else "n.a."),
+            ("Net Present Value (NPV)", usd(npv)),
+            ("Internal Rate of Return (IRR)", pct(irr)),
+            ("Residual Value", usd(residual_value)),
         ]
+
+        col_width_1 = 80
+        col_width_2 = 80
+        total = col_width_1 + col_width_2
+        start_x = (pdf.w - total) / 2
 
         pdf.set_x(start_x)
         pdf.set_font("DejaVu", "B", 11)
         pdf.set_fill_color(220, 230, 241)
-        pdf.cell(col_width_1, 8, "Kennzahl", border=1, fill=True, align="C")
-        pdf.cell(col_width_2, 8, "Bewertung", border=1, fill=True, align="C", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        pdf.cell(col_width_1, 8, "Metric", border=1, fill=True, align="C")
+        pdf.cell(
+            col_width_2,
+            8,
+            "Assessment / Result",
+            border=1,
+            fill=True,
+            align="C",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT
+        )
 
         pdf.set_font("DejaVu", "", 10)
         for left, right in summary_rows:
             pdf.set_x(start_x)
-            val_text = str(right).replace(",", "X").replace(".", ",").replace("X", ".")
             pdf.cell(col_width_1, 8, str(left), border=1, align="L")
-            pdf.cell(col_width_2, 8, val_text, border=1, new_x=XPos.LEFT, new_y=YPos.NEXT, align="C")
+            pdf.cell(
+                col_width_2,
+                8,
+                str(right),
+                border=1,
+                align="C",
+                new_x=XPos.LMARGIN,
+                new_y=YPos.NEXT
+            )
 
-        pdf.ln(12)
+        pdf.ln(10)
 
+        # Preserve the professional interpretive section while avoiding the
+        # German-specific legal/regulatory wording removed from the INTL report.
         pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(0, 8, "Empfehlung", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 8, "Assessment Summary", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(2)
-
         pdf.set_font("DejaVu", "", 10)
-        if npv < 0:
-            empfehlung = (
-                "Die Anlage weist aktuell eine eingeschränkte Wirtschaftlichkeit auf. "
-                "Eine Verbesserung der Rentabilität kann insbesondere durch einen "
-                "höheren Eigenverbrauch erzielt werden."
+
+        if npv > 0:
+            summary_note = (
+                "The photovoltaic system shows a positive economic result under the selected assumptions, "
+                "with a positive NPV at the selected discount rate and identifiable revenue potential over the remaining lifetime."
+            )
+        elif npv < 0:
+            summary_note = (
+                "The photovoltaic system shows a limited economic result under the selected assumptions, "
+                "with a negative NPV at the selected discount rate. The modeled result is sensitive to the assumptions used."
             )
         else:
-            empfehlung = (
-                "Die Photovoltaikanlage zeigt eine wirtschaftlich positive Entwicklung "
-                "mit stabilem Ertragspotenzial."
+            summary_note = (
+                "The photovoltaic system shows an approximately neutral economic result under the selected assumptions, "
+                "with an NPV close to zero at the selected discount rate."
             )
 
-        pdf.multi_cell(0, 6, empfehlung, align="L")
+        pdf.multi_cell(0, 6, summary_note, align="L")
 
-        pdf.ln(10)
-        y_line = pdf.get_y()
-        pdf.set_draw_color(180, 180, 180)
-        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        pdf.ln(10)
-
-        buch = data.get("buchwertData", {})
-        ertrag = data.get("ertragswertData", {})
-        rest = data.get("restwertData", {})
-        marktfaktor = float(rest.get("marktfaktor", 100))
-        
-        production = (
-            ertrag.get("production")
-            or ertrag.get("jahresertrag")
-            or data.get("pvgisData", {}).get("production")
-            or data.get("pvgisData", {}).get("annual_production")
-            or data.get("production")
+        pdf.ln(6)
+        pdf.set_font("DejaVu", "", 9)
+        pdf.multi_cell(
+            0,
+            5,
+            "The assessment reflects the assumptions and inputs used for this analysis. Users should interpret the results in the context of the technical condition, production assumptions, electricity prices, operating costs, remaining lifetime and discount rate of the specific system. No country-specific tax, accounting or regulatory conclusion is implied.",
+            align="L"
         )
 
+        # ======================================================
+        # 1. CLIENT / ORDERING PARTY
+        # ======================================================
+
         pdf.add_page()
         pdf.ln(10)
-
-        pdf.set_font("DejaVu", "B", 14)
-        pdf.cell(0, 8, "Technischer Bewertungsbericht", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="L")
-        pdf.ln(5)
-
-        pdf.set_font("DejaVu", "", 10)
-        pdf.multi_cell(0, 6, "Dieses Dokument stellt eine automatisierte technische und wirtschaftliche Analyse einer Photovoltaikanlage dar.", align="L")
-        pdf.ln(5)
-
-        pdf.cell(0, 6, f"Erstellungsdatum: {datetime.date.today().strftime('%d.%m.%Y')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="L")
-        pdf.cell(0, 6, f"Dokument-ID: {document_id}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="L")
-
-        pdf.ln(7)
-        y_line = pdf.get_y()
-        pdf.set_draw_color(180, 180, 180)
-        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        pdf.ln(7)
-
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "1. AUFTRAGGEBER:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "1. CLIENT / ORDERING PARTY", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(3)
-
         pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, ag.get('name', ''), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, ag.get("adresse", ""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, ag.get("plz_ort", ""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"Telefon: {ag.get('telefon', '')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"E-Mail: {ag.get('email', '')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, clean_display(ag.get("name")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if ag.get("adresse"):
+            pdf.cell(0, 6, str(ag.get("adresse")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if ag.get("plz_ort"):
+            pdf.cell(0, 6, str(ag.get("plz_ort")), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if ag.get("telefon"):
+            pdf.cell(0, 6, f"Phone: {ag.get('telefon')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if ag.get("email"):
+            pdf.cell(0, 6, f"Email: {ag.get('email')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         pdf.ln(8)
-
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "2. BEARBEITET / GEPRÜFT DURCH:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "2. PREPARED BY", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(3)
-
         pdf.set_font("DejaVu", "", 10)
-        fields = [sach.get("name", ""), sach.get("firma", ""), sach.get("adresse", ""), sach.get("plz_ort", "")]
-        for f in fields:
-            clean = str(f).strip().replace("\n", " ").replace("\r", " ")
-            if clean:
-                pdf.cell(0, 6, clean, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        #pdf.ln(3)
-        pdf.cell(0, 6, f"Telefon: {sach.get('phone', '')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"E-Mail: {sach.get('email', '')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"Web: {sach.get('website', '')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.ln(7)
-        y_line = pdf.get_y()
-        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        pdf.ln(7)
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "3. ANLAGENOBJEKT:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("DejaVu", "", 10)
-        installationsart = anlage.get("installationsart", "")
-        objekt_text = f"Photovoltaikanlage auf {installationsart}" if installationsart else "Photovoltaikanlage auf Dachfläche (Gewerbe / Wohngebäude)"
-        pdf.cell(0, 6, objekt_text, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.ln(8)
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "4. STANDORT:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("DejaVu", "", 10)
-
-        adresse = anlage.get("adresse", "")
-        plz = anlage.get("plz", "")
-        ort = anlage.get("ort", "")
-        bundesland = anlage.get("bundesland", "")
-
-        standort_text = f"{adresse}, {plz} {ort}"
-        if bundesland:
-            standort_text += f", {bundesland}, Deutschland"
-        else:
-            standort_text += ", Deutschland"
-
-        pdf.multi_cell(0, 6, standort_text, align="L")
-        pdf.ln(8)
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "5. BEWERTUNGSZIEL:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("DejaVu", "", 10)
-        pdf.multi_cell(0, 6, "Ziel der Analyse ist die Bewertung der Wirtschaftlichkeit der\nPhotovoltaikanlage zum Bewertungsstichtag.", align="L")
+        for value in [
+            sach.get("name", ""),
+            sach.get("firma", ""),
+            sach.get("adresse", ""),
+            sach.get("plz_ort", ""),
+        ]:
+            if str(value).strip():
+                pdf.cell(0, 6, str(value).strip(), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if sach.get("phone"):
+            pdf.cell(0, 6, f"Phone: {sach.get('phone')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if sach.get("email"):
+            pdf.cell(0, 6, f"Email: {sach.get('email')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        if sach.get("website"):
+            pdf.cell(0, 6, f"Web: {sach.get('website')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         pdf.ln(8)
-
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "6. VERWENDUNGSZWECK:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "3. PV SYSTEM", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
-        pdf.multi_cell(0, 6, "Dieser Bericht dient als Entscheidungsgrundlage für Investitions-\nund Projektbewertungen im Bereich Photovoltaik.", align="L")
+        installation_type = translate_value(anlage.get("installationsart"), installation_type_map, "Not specified")
+        system_text = (
+            f"Photovoltaic system - Installation type: {installation_type}"
+        )
+        pdf.multi_cell(0, 6, system_text, align="L")
 
-        #pdf.ln(9)
-        #y_line = pdf.get_y()
-        #pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        
+        pdf.ln(6)
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "4. LOCATION", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+
+        location_parts = [
+            anlage.get("adresse", ""),
+            anlage.get("plz", ""),
+            anlage.get("ort", ""),
+            translate_value(anlage.get("bundesland", ""), state_region_map, ""),
+        ]
+        location_text = ", ".join(str(x).strip() for x in location_parts if str(x).strip())
+        pdf.multi_cell(0, 6, location_text or "Not specified", align="L")
+
+        # ======================================================
+        # 5. VALUATION OBJECTIVE
+        # ======================================================
+
+        pdf.ln(8)
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "5. VALUATION OBJECTIVE", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+        pdf.multi_cell(
+            0,
+            6,
+            "The objective of the analysis is to estimate the technical and economic characteristics of the photovoltaic system and to quantify selected valuation and financial indicators based on the supplied assumptions.",
+            align="L"
+        )
+
+        # ======================================================
+        # 6. INTENDED USE
+        # ======================================================
+
+        pdf.ln(8)
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "6. INTENDED USE", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+        pdf.multi_cell(
+            0,
+            6,
+            "This report is intended as a decision-support document for photovoltaic project, investment and asset-value analysis. It is not a country-specific tax, accounting, legal or regulatory assessment.",
+            align="L"
+        )
+
+        # ======================================================
+        # 7. LOCATION DATA
+        # ======================================================
+
         pdf.add_page()
         pdf.ln(10)
-
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "7. STANDORTDATEN:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "7. LOCATION DATA", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, f"- Ort: {anlage.get('ort', '-')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Bundesland: {anlage.get('bundesland', '-')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, "- Land: Deutschland", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        try:
-            breitengrad = float(anlage.get("breitengrad", 0) or 0)
-        except:
-            breitengrad = 0
-        try:
-            langengrad = float(anlage.get("langengrad", 0) or 0)
-        except:
-            langengrad = 0
-
-        pdf.cell(0, 6, f"- Breitengrad: {breitengrad:.4f}°", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Längengrad: {langengrad:.4f}°", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- City: {clean_display(anlage.get('ort'))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- State / Region: {translate_value(anlage.get('bundesland'), state_region_map)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Latitude: {latitude:.4f}°" if latitude else "- Latitude: Not specified", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Longitude: {longitude:.4f}°" if longitude else "- Longitude: Not specified", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(9)
 
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "8. ANLAGENDATEN:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, f"- Anlagenleistung: {fmt_eu(anlage.get('kwp', 0))} kWp", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Installationsart: {anlage.get('installationsart', '-')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Modultechnologie: {anlage.get('modultyp', '-')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Dachneigung / Modulneigung: {fmt_eu(anlage.get('dachneigung', 0))}°", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Ausrichtung (Azimut): {fmt_eu(anlage.get('azimut', 0))}°", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Performance Ratio (PR): {fmt_eu(pr_input)} % (typischer Wert für Dachanlagen in DE)", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Spezifischer Ertrag: {fmt_eu(ertrag.get('spezifischer_ertrag', 0))} kWh/kWp.a", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        # ======================================================
+        # 8. SYSTEM DATA
+        # ======================================================
 
-        prod_val = "-"
-        if production != "-":
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "8. SYSTEM DATA", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+        pdf.cell(0, 6, f"- System Size: {fmt_num(anlage.get('kwp'))} kWp", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Installation Type: {translate_value(anlage.get('installationsart'), installation_type_map)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Module Technology: {translate_value(anlage.get('modultyp'), module_technology_map)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Tilt / Roof Angle: {fmt_num(anlage.get('dachneigung'))}°", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Orientation / Azimuth: {fmt_num(anlage.get('azimut'))}°", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Performance Ratio (PR): {pct(pr_input, 2)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Specific Yield: {fmt_num(specific_yield)} kWh/kWp/year", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- PVGIS Annual Production: {fmt_num(production_value)} kWh/year" if production_value else "- PVGIS Annual Production: Not specified", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Installation Date: {clean_display(anlage.get('inbetriebnahme'))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Remaining Lifetime: {fmt_num(restlaufzeit, 1)} years", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Annual Degradation: {pct(ertrag.get('degradation'), 2)} / year", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.ln(9)
+
+        # ======================================================
+        # 9. TECHNICAL DETAILS
+        # ======================================================
+
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "9. TECHNICAL DETAILS", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+
+        module_model = f"{anlage.get('modulhersteller', '')} {anlage.get('modellmodule', '')}".strip()
+        inverter_model = f"{anlage.get('wrhersteller', '')} {anlage.get('wrmodell', '')}".strip()
+        inverter_type = anlage.get("wechselrichtertyp") or anlage.get("wrtyp") or ""
+
+        pdf.cell(0, 6, f"- Module Model: {clean_display(module_model)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Inverter Model: {clean_display(inverter_model)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Inverter Type: {translate_value(inverter_type, inverter_type_map)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Inverter Installation Year: {clean_display(anlage.get('wrinstallationsjahr'))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Inverter Replaced: {yes_no(anlage.get('wraustausch'))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Last Maintenance: {clean_display(anlage.get('letztewartung'))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Maintenance Contract: {yes_no(anlage.get('wartungsvertrag'))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Known Issues: {clean_display(anlage.get('probleme'), 'None reported')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # ======================================================
+        # 10. OPERATING MODEL
+        # ======================================================
+
+        pdf.ln(9)
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "10. OPERATING MODEL", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+
+        models = [
+            ("volleinspeisung", "Full Grid Export (100%)"),
+            ("eigenverbrauch", "Self-consumption + Grid Export"),
+            ("eigenverbrauch_batterie", "Self-consumption + Battery (BESS)"),
+        ]
+
+        normalized_model = str(operating_model_raw or "").strip().lower()
+        for key, label in models:
+            selected = normalized_model == key
+            symbol = "☑" if selected else "☐"
+            pdf.cell(0, 6, f"{symbol} {label}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        pdf.cell(0, 6, f"- Selected model: {operating_model}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Self-consumption share: {pct(eigen, 1)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Battery losses: {pct(battery_losses, 1)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Estimated grid export share: {pct(grid_export_share, 1)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # ======================================================
+        # OPTIONAL SELF-CONSUMPTION CHART
+        # ======================================================
+        pdf.add_page()
+        pdf.ln(10)
+
+        pie_chart_path = None
+        show_pie_chart = normalized_model in ["eigenverbrauch", "eigenverbrauch_batterie"]
+
+        if show_pie_chart and (eigen + grid_export_share) > 0:
             try:
-                prod_val = fmt_eu(float(production))
-            except:
-                prod_val = "-"
-        pdf.cell(0, 6, f"- Jahresproduktion (PVGIS): ca. {prod_val} kWh/a", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Inbetriebnahme: {anlage.get('inbetriebnahme', '-')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Restlaufzeit: {ertrag.get('restlaufzeit', '-')} Jahre", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Degradation: {fmt_eu(ertrag.get('degradation', 0))} % p.a.", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.ln(9)
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "9. TECHNISCHE DETAILS:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("DejaVu", "", 10)
-
-        modul = f"{anlage.get('modulhersteller','-')} {anlage.get('modellmodule','')}".strip()
-        wr = f"{anlage.get('wrhersteller','-')} {anlage.get('wrmodell','')}".strip()
-        wechselrichtertyp = anlage.get("wechselrichtertyp") or wr
-
-        wartung = anlage.get('letztewartung') or "n.a."
-        probleme = anlage.get('probleme') or "Keine"
-
-        wr_installationsjahr = anlage.get('wrinstallationsjahr') or "n.a."
-        wr_austausch = anlage.get('wraustausch') or "Nein"
-
-        pdf.cell(0, 6, f"- Module Modell: {modul}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Wechselrichter Modell: {wr}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Wechselrichtertyp: {wechselrichtertyp}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- WR Installationsjahr: {wr_installationsjahr}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Austausch bereits erfolgt: {wr_austausch}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Letzte Wartung: {wartung}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Wartungsvertrag vorhanden: {anlage.get('wartungsvertrag', 'Nein')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Bekannte Probleme: {probleme}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.ln(9)
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "10. BETRIEBSMODELL:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("DejaVu", "", 10)
-
-        raw_val = str(ertrag.get("betriebsmodell") or "").strip()
-        val_clean = raw_val.lower().replace(" ", "").replace("/", "").replace("+", "").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
-
-        modelos = {
-            "volleinspeisung": "Volleinspeisung",
-            "eigenverbrauch": "Eigenverbrauch + Teileinspeisung",
-            "eigenverbrauch_batterie": "Eigenverbrauch mit Speicher",
-            "mieterstrom": "Mieterstrommodell",
-            "direktvermarktung": "Direktvermarktung / Marktprämie",
-        }
-
-        for key, label in modelos.items():
-            is_selected = (val_clean == key)
-            simbolo = "☑" if is_selected else "☐"
-            pdf.cell(0, 6, f"{simbolo} {label}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        ertrag = data.get("ertragswertData", {})
-
-        eigen_raw = ertrag.get("eigenverbrauch_anteil") or "0"
-        try:
-            # Limpia % y comas, convierte a float
-            eigen_clean = str(eigen_raw).replace("%", "").replace(",", ".").strip()
-            eigen = float(eigen_clean)
-
-            # 🔥 NORMALIZACIÓN INTELIGENTE
-            # si viene como ratio (0–1), convertir a porcentaje
-            if eigen <= 1:
-                eigen = eigen * 100
-
-        except:
-            eigen = 0.0
-
-        # límites
-        eigen = max(0.0, min(eigen, 100.0))
-
-        batterie_verluste = float(ertrag.get("batterie_verluste") or 0)
-
-        netz = 100.0 - eigen - batterie_verluste
-        netz = max(0.0, netz)
-
-        # Imprimir formato alemán
-        #pdf.set_font("DejaVu", "", 10)
-        #pdf.cell(0, 6, f"- Eigenverbrauchsanteil: {eigen:.2f}".replace(".", ",") + " %", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        #pdf.cell(0, 6, f"- Netzeinspeisung: {netz:.2f}".replace(".", ",") + " %", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.add_page()
-        pdf.ln(10)
-
-        # SOLO MOSTRAR PIE CHART PARA ESTOS MODELOS
-        show_pie_chart = val_clean in ["eigenverbrauch", "eigenverbrauch_batterie"]
-
-        # ======================================================
-        # PIE CHART - EIGENVERBRAUCH vs NETZEINSPEISUNG
-        # ======================================================
-        pie_chart_path = None  # 👈 IMPORTANTE
-        
-        if show_pie_chart:
-            pie_chart_path = os.path.join(
-                TEMP_DIR,
-                f"piechart_{uuid.uuid4().hex}.png"
-            )
-
-            labels = [
-                f"Eigenverbrauch\n{eigen:.1f} %",
-                f"Netzeinspeisung\n{netz:.1f} %"
-            ]
-
-            sizes = [eigen, netz]
-
-            plt.figure(figsize=(3, 3))
-
-            plt.pie(
-                sizes,
-                labels=labels,
-                autopct='%1.1f%%',
-                startangle=90
-            )
-
-            plt.title("Eigenverbrauch vs. Netzeinspeisung", fontweight='bold')
-
-            plt.axis('equal')
-
-            plt.savefig(
-                pie_chart_path,
-                bbox_inches="tight",
-                transparent=False
-            )
-
-            plt.close('all')
-            gc.collect()
-
-            # INSERTAR EN PDF
-            if os.path.exists(pie_chart_path):
-
-                #pdf.ln(5)
-
-                #pdf.set_font("DejaVu", "B", 11)
-                #pdf.cell(
-                #    0,
-                #    8,
-                #    "Eigenverbrauchsverteilung",
-                #    align="C",
-                #    new_x=XPos.LMARGIN,
-                #    new_y=YPos.NEXT
-                #)
-
-                #pdf.ln(3)
-
-                img_width = 90
-                page_width = pdf.w - pdf.l_margin - pdf.r_margin
-                x_center = pdf.l_margin + (page_width - img_width) / 2
-
-                pdf.image(
-                    pie_chart_path,
-                    x=x_center,
-                    w=img_width
+                pie_chart_path = os.path.join(
+                    TEMP_DIR,
+                    f"piechart_{uuid.uuid4().hex}.png"
                 )
-                # ✅ SOLO SI SE DIBUJA EL CHART
-                pdf.ln(5)
 
-        def get_eeg_data_local(betriebsmodell, kwp):
-            try:
-                kwp = float(kwp or 0)
-            except:
-                kwp = 0
-            bm = str(betriebsmodell or "").lower().replace(" ", "")
-            einspeiseverguetung = "-"
-            eeg_periode = "Feb–Jul 2026"
-            if "mieterstrom" in bm:
-                if kwp <= 10: einspeiseverguetung = "2,56 ct/kWh"
-                elif kwp <= 40: einspeiseverguetung = "2,38 ct/kWh"
-                elif kwp <= 100: einspeiseverguetung = "2,38 ct/kWh"
-                else: einspeiseverguetung = "1,60 ct/kWh"
-            elif "direktvermarktung" in bm:
-                if kwp <= 10: einspeiseverguetung = "8,18 ct/kWh"
-                elif kwp <= 40: einspeiseverguetung = "7,13 ct/kWh"
-                elif kwp <= 100: einspeiseverguetung = "5,90 ct/kWh"
-                else: einspeiseverguetung = "5,90–7,70 ct/kWh"
-            elif "volleinspeisung" in bm:
-                if kwp <= 10: einspeiseverguetung = "12,34 ct/kWh"
-                else: einspeiseverguetung = "10,35 ct/kWh"
-            elif "eigenverbrauch" in bm:
-                if kwp <= 10: einspeiseverguetung = "7,78 ct/kWh"
-                elif kwp <= 40: einspeiseverguetung = "6,73 ct/kWh"
-                else: einspeiseverguetung = "5,50 ct/kWh"
-            return einspeiseverguetung, eeg_periode
+                labels = [
+                    f"Self-consumption\n{eigen:.1f}%",
+                    f"Grid export\n{grid_export_share:.1f}%"
+                ]
+                sizes = [eigen, grid_export_share]
 
-        kwp_val = anlage.get("kwp", 0)
-        eeg_tarif, eeg_periode = get_eeg_data_local(anlage.get("betriebsmodell") or ertrag.get("betriebsmodell"), kwp_val)
+                plt.figure(figsize=(3.5, 3.5))
+                plt.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
+                plt.title("Self-consumption vs. Grid Export", fontweight="bold")
+                plt.axis("equal")
+                plt.savefig(pie_chart_path, bbox_inches="tight", transparent=False)
+                plt.close("all")
+                gc.collect()
+
+                if os.path.exists(pie_chart_path):
+                    pdf.ln(5)
+                    img_width = 90
+                    page_width = pdf.w - pdf.l_margin - pdf.r_margin
+                    x_center = pdf.l_margin + (page_width - img_width) / 2
+                    pdf.image(pie_chart_path, x=x_center, w=img_width)
+                    pdf.ln(5)
+            except Exception as e:
+                print("Self-consumption chart error:", e)
+                pie_chart_path = None
+
+        # ======================================================
+        # 11. FINANCIAL ASSUMPTIONS
+        # ======================================================
 
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "11. VERGÜTUNG / EEG-RAHMENDATEN:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "11. FINANCIAL ASSUMPTIONS", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
-        pdf.cell(0, 6, f"- Einspeisevergütung: {eeg_tarif}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- EEG-Periode (Tarifzeitraum): {eeg_periode}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, "- Vergütungsdauer: 20 Jahre ab Inbetriebnahme (gemäß EEG)", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        pdf.ln(9)
-        y_line = pdf.get_y()
-        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        pdf.ln(9)
+        export_price = num(ertrag.get("einspeiseverguetung"), 0.0)
+        electricity_value = num(ertrag.get("strompreis"), 0.0)
+        discount_rate = num(ertrag.get("diskontsatz"), 0.0)
 
+        pdf.cell(0, 6, f"- Initial Investment / CAPEX: {usd(capex)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Annual Operating Costs / OPEX: {usd(opex_anual)} / year", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Electricity Value / Retail Electricity Price: ${electricity_value:,.4f} / kWh", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Grid Export Price: ${export_price:,.4f} / kWh", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Discount Rate / WACC: {pct(discount_rate)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Annual Degradation: {pct(ertrag.get('degradation'), 2)} / year", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Currency: USD", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        # ======================================================
+        # 12. VALUATION METHODOLOGY
+        # ======================================================
+
+        pdf.ln(6)
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "12. BEWERTUNGSMETHODIK:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "12. VALUATION METHODOLOGY", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
-        pdf.multi_cell(0, 6, "Die Analyse basiert auf standardisierten Annahmen und vereinfachten Modellen.\nIndividuelle projektspezifische Faktoren werden nur eingeschränkt berücksichtigt.\nDie Ergebnisse stellen eine indikative Bewertung dar und ersetzen keine\nindividuelle fachliche Prüfung durch einen qualifizierten Sachverständigen.")
+        pdf.multi_cell(
+            0,
+            6,
+            "The report combines an indicative depreciated asset value, a PV economic value calculation and selected financial indicators. The calculations use the technical, production and financial assumptions entered in the application.",
+            align="L"
+        )
+        pdf.ln(3)
+        pdf.multi_cell(
+            0,
+            6,
+            "The Depreciated Asset Value is calculated from the initial investment, asset age, expected lifetime and selected depreciation method. It is an indicative analytical value and is not intended to represent a country-specific tax or accounting value.",
+            align="L"
+        )
+        pdf.ln(3)
+        pdf.multi_cell(
+            0,
+            6,
+            "The PV Economic Value is based on projected economic value over the remaining lifetime. NPV, IRR and payback are derived from the financial cash-flow assumptions supplied to the application.",
+            align="L"
+        )
 
-        pdf.ln(9)
+        # ======================================================
+        # 13. LIMITATIONS
+        # ======================================================
 
+        pdf.ln(6)
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "13. EINSCHRÄNKUNGEN DER BEWERTUNG:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "13. LIMITATIONS OF THE ANALYSIS", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
-        pdf.multi_cell(0, 6, "Die Bewertung der Photovoltaikanlage erfolgt auf Basis des Ertragswertverfahrens unter Berücksichtigung folgender Faktoren:\n - Technische Anlagenparameter (Leistung, PR, Degradation)\n - Standortbezogene Ertragsdaten (PVGIS)\n - Wirtschaftliche Kennzahlen (NPV, IRR)\n - Laufzeit der Anlage und Restnutzungsdauer ")
+        pdf.multi_cell(
+            0,
+            6,
+            "The analysis is model-based and depends on the quality and completeness of the supplied information. Actual production, electricity prices, operating costs, financing conditions, equipment condition, degradation and future market conditions may differ from the assumptions used.",
+            align="L"
+        )
+        pdf.ln(3)
+        pdf.multi_cell(
+            0,
+            6,
+            "PVGIS data, where available, are used as a solar-resource and production reference. They do not constitute a guarantee of future system production.",
+            align="L"
+        )
 
-        pdf.ln(9)
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.set_x(pdf.l_margin)
-        pdf.cell(0, 6, "14. ANNAHMEN:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.set_font("DejaVu", "", 10)
-        pdf.set_x(pdf.l_margin)
-        pdf.multi_cell(0, 6, "Für die Berechnung wurden folgende Annahmen getroffen:\n- Keine signifikante Verschattung der Anlage\n- Konstante regulatorische Rahmenbedingungen", align="L")
-
-        pdf.set_x(pdf.l_margin)
-        pdf.multi_cell(0, 6, f"- Durchschnittliche Degradation von {fmt_eu(ertrag.get('degradation', 0))} % pro Jahr", align="L")
-
-        pdf.set_x(pdf.l_margin)
-        pdf.multi_cell(0, 6, "- Betriebskosten bleiben konstant\n- Keine außerplanmäßigen Reparaturen", align="L")
-
-        pdf.ln(9)
-        y_line = pdf.get_y()
-        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
+        # ======================================================
+        # 14. ASSUMPTIONS
+        # ======================================================
 
         pdf.add_page()
         pdf.ln(10)
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "14. ASSUMPTIONS", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+        pdf.multi_cell(
+            0,
+            6,
+            "The following assumptions are relevant to the calculation unless explicitly changed by the user:",
+            align="L"
+        )
+        for assumption in [
+            "The supplied system parameters are representative of the photovoltaic system being analyzed.",
+            f"Annual degradation is assumed at {pct(ertrag.get('degradation'), 2)}.",
+            "Annual operating costs are represented by the OPEX input and are not automatically adjusted for inflation unless the model specifies otherwise.",
+            "No country-specific tax, accounting or regulatory treatment is applied in the international report.",
+            "No extraordinary repair event is automatically assumed unless reflected in the user inputs.",
+        ]:
+            pdf.multi_cell(0, 6, f"- {assumption}", align="L")
+
+        pdf.ln(9)
+        # ======================================================
+        # 15. VALUATION DATA
+        # ======================================================
 
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "15. BEWERTUNGSDATEN:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "15. VALUATION DATA", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
 
-        try:
-            investitionskosten = float(buch.get("anschaffung"))
-        except:
-            investitionskosten = 12000.0
+        pdf.cell(0, 6, f"- Initial Investment / CAPEX: {usd(capex)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Asset Age: {fmt_num(asset_age, 1)} years", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Expected Asset Lifetime: {fmt_num(asset_lifetime, 1)} years", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        depreciation_method_raw = str(buch.get("methode") or "linear").strip().lower()
+        depreciation_method = "Straight-line" if depreciation_method_raw in {"linear", "straight-line", "straight line"} else "Declining-balance"
+        pdf.cell(0, 6, f"- Depreciation Method: {depreciation_method}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Annual Depreciation: {usd(annual_depreciation)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Accumulated Depreciation: {usd(accumulated_depreciation)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Depreciated Asset Value: {usd(book_value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Annual Gross Revenue: {usd(annual_gross_revenue)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Average Annual Net Economic Value: {usd(average_annual_net_value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- PV Economic Value, cumulative: {usd(pv_economic_value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Future Earnings Used for Residual Value: {usd(future_earnings)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Cost Discount: {pct(cost_discount, 1)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Sale Discount: {pct(sale_discount, 1)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Residual Value: {usd(residual_value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Market Factor Input: {pct(market_factor, 0)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        buchwert = buch.get("buchwert") or 9600.0
-        opex = ertrag.get("opex") or 200.0
-        diskontsatz = ertrag.get("diskontsatz") or 5.0
-        strompreis_raw = ertrag.get("strompreis", 0)
-        try:
-            strompreis = float(str(strompreis_raw).replace(",", "."))
-        except:
-            strompreis = 0.0
-
-        ev_anteil = ertrag.get("eigenverbrauch_anteil") or 0
-
-        pdf.cell(0, 6, f"- Investitionskosten (CAPEX): {eur(investitionskosten)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Laufende Betriebskosten (OPEX): {fmt_eu(opex)} € / Jahr", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Strompreis: {fmt_eu(strompreis)} € / kWh", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Diskontierungszins (WACC): {fmt_eu(diskontsatz)} %", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Buchwert (nach AfA gem. EStG): {eur(buchwert)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
+        # ======================================================
+        # 16. CASH FLOW ANALYSIS
+        # ======================================================
+        pdf.add_page()
         pdf.ln(10)
 
-        cashflows = ertrag.get("cashflows", [])
-
-        # ======================================================
-        # PRIORITY 5 - CASHFLOW CHART
-        # ======================================================
-
+        cashflows = ertrag.get("cashflows", []) or []
         chart_path = None
 
         if cashflows and len(cashflows) > 1:
+            try:
+                values = [num(v, 0) for v in cashflows[1:]]
+                years = list(range(1, len(values) + 1))
 
-            years = list(range(1, len(cashflows)))
+                chart_path = os.path.join(
+                    TEMP_DIR,
+                    f"cashflow_{uuid.uuid4().hex}.png"
+                )
 
-            values = cashflows[1:]  # ignorar año 0 si existe
-
-            plt.figure(figsize=(8, 4))
-
-            plt.plot(years, values, marker='o')
-
-            plt.xlabel("Jahr")
-            plt.ylabel("Cashflow (€)")
-            plt.title("Cashflow Entwicklung")
-
-            plt.grid(True)
-
-            # Línea de break-even (opcional pero PRO)
-            plt.axhline(0, linestyle='--')
-
-            chart_path = os.path.join(
-                TEMP_DIR,
-                f"cashflow_{uuid.uuid4().hex}.png"
-            )
-
-            plt.savefig(chart_path, bbox_inches="tight")
-
-            plt.close('all')
-            gc.collect()
-
+                plt.figure(figsize=(8, 4))
+                plt.plot(years, values, marker="o")
+                plt.xlabel("Year")
+                plt.ylabel("Net Cash Flow (USD)")
+                plt.title("Cash Flow Development")
+                plt.grid(True)
+                plt.axhline(0, linestyle="--")
+                plt.savefig(chart_path, bbox_inches="tight")
+                plt.close("all")
+                gc.collect()
+            except Exception as e:
+                print("Cash flow chart error:", e)
+                chart_path = None
 
         if len(cashflows) > 1:
-            
+            pdf.ln(8)
             pdf.set_font("DejaVu", "B", 11)
-            pdf.cell(0, 10, "16. CASHFLOW-ANALYSE (Auszug 20 Jahre)", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="L")
+            pdf.cell(0, 8, "16. CASH FLOW ANALYSIS", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
             pdf.ln(4)
 
-            col_width_jahr = 40
-            col_width_val = 125
-            ancho_total_tabla = col_width_jahr + col_width_val
-            posicion_x_centrada = (pdf.w - ancho_total_tabla) / 2
+            pdf.set_font("DejaVu", "", 10)
+            pdf.multi_cell(
+                0,
+                6,
+                "Detailed annual cash flow development based on the modeled assumptions. Year 0, if present, represents the initial investment and is not repeated in the annual operating table.",
+                align="L"
+            )
+            pdf.ln(4)
 
+            # Same colored section indicator used by the German PDF.
+            cashflow_band_width = 169
+            cashflow_band_x = (pdf.w - cashflow_band_width) / 2
+            pdf.set_x(cashflow_band_x)
             pdf.set_fill_color(*rating_color)
             pdf.set_text_color(255, 255, 255)
             pdf.set_font("DejaVu", "B", 12)
-            pdf.cell(0, 10, "Detaillierte Liquiditätsentwicklung", border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C", fill=True)
+            pdf.cell(
+                cashflow_band_width,
+                10,
+                "Detailed Cash Flow Development",
+                border=0,
+                new_x=XPos.LMARGIN,
+                new_y=YPos.NEXT,
+                align="C",
+                fill=True
+            )
             pdf.set_text_color(0, 0, 0)
             pdf.ln(4)
 
-            col_width_jahr = 40
-            col_width_val = 129
-
+            col_year = 40
+            col_value = 129
             pdf.set_font("DejaVu", "B", 11)
             pdf.set_fill_color(220, 230, 241)
-            pdf.cell(col_width_jahr, 8, "Jahr", border=1, fill=True, align="C")
-            pdf.cell(col_width_val, 8, "Cashflow (Netto)", border=1, fill=True, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.cell(col_year, 8, "Year", border=1, fill=True, align="C")
+            pdf.cell(col_value, 8, "Net Cash Flow", border=1, fill=True, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
             pdf.set_font("DejaVu", "", 10)
-
             for i in range(1, min(21, len(cashflows))):
                 fill_row = i % 2 == 0
                 if fill_row:
                     pdf.set_fill_color(245, 245, 245)
+                else:
+                    pdf.set_fill_color(255, 255, 255)
+                pdf.cell(col_year, 7, f"Year {i}", border=1, fill=True, align="C")
+                pdf.cell(
+                    col_value,
+                    7,
+                    usd(cashflows[i]),
+                    border=1,
+                    fill=True,
+                    align="C",
+                    new_x=XPos.LMARGIN,
+                    new_y=YPos.NEXT
+                )
 
-                pdf.cell(col_width_jahr, 7, f"Jahr {i}", border=1, fill=fill_row, align="C")
-                valor_formateado = fmt_eu(cashflows[i])
-                pdf.cell(col_width_val, 7, valor_formateado, border=1, fill=fill_row, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-            # ======================================================
-            # CASHFLOW CHART INSERT
-            # ======================================================
+            pdf.ln(10)
+         
 
             if chart_path and os.path.exists(chart_path):
-
                 pdf.ln(10)
                 pdf.add_page()
                 pdf.ln(10)
-
-                #pdf.set_font("DejaVu", "B", 11)
-                #pdf.cell(
-                #    0,
-                #    8,
-                #    "Cashflow Entwicklung (Grafik)",
-                #    align="C",
-                #    new_x=XPos.LMARGIN,
-                #    new_y=YPos.NEXT
-                #)
-
-                pdf.ln(4)
-
-                # --- ANCHO DE LA IMAGEN ---
-                img_width = 170  # ajusta aquí el tamaño
-
-                # --- CALCULAR CENTRADO ---
+                img_width = 170
                 page_width = pdf.w - pdf.l_margin - pdf.r_margin
                 x_center = pdf.l_margin + (page_width - img_width) / 2
+                pdf.image(chart_path, x=x_center, w=img_width)
 
-                pdf.image(
-                    chart_path,
-                    x=x_center,
-                    w=img_width
-                )                
+        # ======================================================
+        # 17. ANALYSIS RESULTS
+        # ======================================================
 
-        pdf.ln(10)
-
+        
+        pdf.ln(5)
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "17. ERGEBNISSE DER WIRTSCHAFTLICHKEITSANALYSE:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "17. FINANCIAL ANALYSIS RESULTS", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
 
-        npv = ertrag.get("npv") or 6810.36
-        irr = ertrag.get("irr") or 11.78
+        pdf.cell(0, 6, f"- Cost Deduction: {pct(cost_discount, 1)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Sales Deduction: {pct(sale_discount, 1)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Net Present Value (NPV): {usd(npv)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Internal Rate of Return (IRR): {pct(irr)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        rest = data.get("restwertData", {})
-        zustand_label = (
-            rest.get("zustand_label")
-            or rest.get("zustand")
-            or rest.get("condition")
-            or "Unbekannt"
+        try:
+            roi = ((pv_economic_value - capex) / capex) * 100 if capex else 0.0
+        except Exception:
+            roi = 0.0
+
+        pdf.cell(0, 6, f"- Return on Investment (ROI): {pct(roi)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        if payback_numeric is not None:
+            pdf.cell(0, 6, f"- Payback Period: {fmt_num(payback_numeric, 0)} years", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        else:
+            pdf.cell(0, 6, "- Payback Period: n.a.", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        pdf.cell(0, 6, f"- Indicative LCOE: ${lcoe:,.4f} / kWh", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Depreciated Asset Value: {usd(book_value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- PV Economic Value (Cumulative): {usd(pv_economic_value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Future Earnings: {usd(future_earnings)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        maintenance_raw = rest.get("wartung", False)
+        if isinstance(maintenance_raw, str):
+            maintenance_effect = 15.0 if maintenance_raw.strip().lower() in {"true", "1", "yes", "ja"} else 0.0
+        else:
+            maintenance_effect = 15.0 if bool(maintenance_raw) else 0.0
+
+        pdf.cell(0, 6, f"- Maintenance Effect: +{maintenance_effect:.1f}%", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- Residual Value: {usd(residual_value)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        market_label = "Normal"
+        if market_factor < 100:
+            market_label = "Weak"
+        elif market_factor > 100:
+            market_label = "Strong"
+
+        pdf.cell(0, 6, f"- Market Factor: {fmt_num(market_factor, 0)}% ({market_label})", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"- System Condition: {condition_label(rest.get('zustand_label') or rest.get('zustand') or anlage.get('zustand'))}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        pdf.ln(10)
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.cell(0, 6, "18. INTERPRETATION OF RESULTS", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+
+        if npv > 0:
+            interpretation = (
+                "The calculated NPV is positive at the selected discount rate. This indicates that the modeled cash flows exceed the discounted initial investment under the assumptions used."
+            )
+        elif npv < 0:
+            interpretation = (
+                "The calculated NPV is negative at the selected discount rate. Under the assumptions used, the modeled discounted cash flows do not fully offset the initial investment."
+            )
+        else:
+            interpretation = (
+                "The calculated NPV is approximately zero at the selected discount rate. Under the assumptions used, the modeled discounted cash flows approximately offset the initial investment."
+            )
+
+        pdf.multi_cell(0, 6, interpretation, align="L")
+        pdf.ln(4)
+        pdf.multi_cell(
+            0,
+            6,
+            "The calculated indicators should be considered together with the technical condition, expected lifetime, production assumptions, electricity-price assumptions, operating costs and discount rate. Changes in these assumptions can materially change the results.",
+            align="L"
         )
 
-        ertrag = data.get("ertragswertData", {})
-        raw_val = ertrag.get("ertragswertKumuliert")
-        try:
-            if raw_val and str(raw_val).strip() != "":
-                ertragswert_val = float(raw_val)
-            else:
-                ertragswert_val = 0.0
-        except (ValueError, TypeError):
-            ertragswert_val = 0.0
-
-        restwert_val = rest.get("restwert") or 17217.11
-        marktfaktor = float(rest.get("marktfaktor", 100))
-
-        if marktfaktor == 90:
-            markt_label = "Schwach"
-        elif marktfaktor == 110:
-            markt_label = "Stark"
-        else:
-            markt_label = "Normal"
-
-        payback_val = ertrag.get("payback")
-
-        zuk = float(rest.get("zukuenftige_gewinne") or 0)
-        kosten = float(rest.get("kostenabschlag") or 0)
-        verkauf = float(rest.get("verkaufsabschlag") or 0)
-        
-        wartung_raw = rest.get("wartung", False)
-
-        if isinstance(wartung_raw, str):
-            wartung = wartung_raw.lower() in ["true", "1", "yes", "ja"]
-        else:
-            wartung = bool(wartung_raw)
-
-        pdf.cell(0, 6, f"- Abschlag für Kosten: {kosten:.1f} %", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Abschlag für Verkauf: {verkauf:.1f} %", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        try:
-            roi = ((ertragswert_val - investitionskosten) / investitionskosten) * 100
-        except:
-            roi = 0
-
-        pdf.cell(0, 6, f"- Netto-Kapitalwert (NPV): {eur(npv)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Interne Verzinsung (IRR): {fmt_eu(irr)} %", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Return on Investment (ROI): {fmt_eu(roi)} %", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Stromgestehungskosten (LCOE): {fmt_eu(lcoe)} € / kWh", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        payback_text = f"{fmt_eu(payback_val).replace(',00', '')} Jahre" if payback_val else "n.a."
-        pdf.cell(0, 6, f"- Amortisationsdauer (Payback): {payback_text}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Zustand der Anlage: {zustand_label}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        wartung_text = " (inkl. Wartungseffekt +15%)" if wartung else ""
-        pdf.cell(0, 6, f"- Zukünftige Gewinne: {eur(zuk)}{wartung_text}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.cell(0, 6, f"- Ertragswert (kumuliert): {eur(ertragswert_val)}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.cell(0, 6, f"- Restwert: {eur(restwert_val)} (Marktfaktor: {markt_label} {marktfaktor:.0f}%)", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.ln(10)
-
-        try:
-            npv_val = float(npv)
-        except:
-            npv_val = 0
-
-        if npv_val > 0:
-            interpretation = "Der positive Kapitalwert zeigt, dass die Photovoltaikanlage wirtschaftlich rentabel ist."
-        elif npv_val == 0:
-            interpretation = "Der Kapitalwert ist neutral. Die Investition deckt exakt die Kapitalkosten."
-        elif npv_val > -5000:
-            interpretation = "Der negative Kapitalwert deutet auf eine eingeschränkte Wirtschaftlichkeit hin."
-        else:
-            interpretation = "Der deutlich negative Kapitalwert zeigt, dass die Investition wirtschaftlich nicht empfehlenswert ist."
-
-        pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "18. INTERPRETATION DER ERGEBNISSE:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("DejaVu", "", 10)
-        pdf.multi_cell(0, 6, interpretation)
-
-        pdf.ln(10)
-        y_line = pdf.get_y()
-        pdf.line(pdf.l_margin, y_line, pdf.w - pdf.r_margin, y_line)
-        pdf.ln(10)
+        # ======================================================
+        # 19. DISCLAIMER
+        # ======================================================
 
         pdf.add_page()
         pdf.ln(10)
-        
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "19. HAFTUNGSAUSSCHLUSS:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
+        pdf.cell(0, 6, "19. DISCLAIMER", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("DejaVu", "", 10)
 
-        haftung_text = (
-            "Dieser Analysebericht wurde nach bestem Wissen und Gewissen unter Anwendung anerkannter "
-            "technischer Bewertungsmethoden erstellt. Die formale Gestaltung orientiert sich "
-            "an den Vorgaben der DIN 5008.\n\n"
-            "Es handelt sich nicht um ein gerichtlich anerkanntes Sachverständigengutachten "
-            "und entfaltet keine rechtliche Bindungswirkung.\n\n"
-            "Die im Analysebericht enthaltenen Ergebnisse und Bewertungen basieren auf den zum "
-            "Zeitpunkt der Erstellung verfügbaren Daten sowie auf getroffenen Annahmen. "
-            "Für deren Vollständigkeit und Richtigkeit wird keine Gewähr übernommen.\n\n"
-            "Dieser Analysebericht dient ausschließlich zu Informations- und Entscheidungsunterstützung. "
-            "Eine Haftung für Entscheidungen, die auf Grundlage dieses Berichts getroffen werden, wird – "
-            "soweit gesetzlich zulässig – ausgeschlossen.\n\n"
-            "Die Weitergabe an Dritte oder die Veröffentlichung, auch auszugsweise, bedarf der vorherigen "
-            "schriftlichen Zustimmung des Erstellers.\n\n"
-            "Eine Verwendung für gerichtliche oder behördliche Zwecke ist nicht vorgesehen. "
-            "Die Verantwortung für die finale Bewertung und Nutzung der Ergebnisse liegt beim Anwender."
+        disclaimer = (
+            "This report is an automated analytical document generated by PV-Valuator. "
+            "The calculations are based on the data and assumptions entered into the application and on the calculation methods implemented in the software.\n\n"
+            "The Depreciated Asset Value is an indicative analytical value and is not a country-specific tax or accounting valuation. "
+            "The PV Economic Value and Residual Value are model-based estimates and should not be interpreted as certified market values.\n\n"
+            "Production, electricity prices, operating costs, degradation, equipment condition, financing conditions and other future parameters may differ from the assumptions used in the report. "
+            "PVGIS information, where used, is a reference for solar-resource and production analysis and does not constitute a guarantee of future production.\n\n"
+            "This report is intended for information and decision-support purposes. It does not constitute legal, tax, accounting, regulatory or investment advice, and it is not intended to replace a country-specific professional assessment where such an assessment is required.\n\n"
+            "No representation is made that the results are suitable for a particular transaction, financing decision, accounting treatment, tax filing, court proceeding or regulatory submission. "
+            "The user remains responsible for reviewing the assumptions and for the final use and interpretation of the results."
         )
 
-        pdf.multi_cell(0, 5, haftung_text, align="L")
+        pdf.multi_cell(0, 5.5, disclaimer, align="L")
 
-        pdf.ln(10)
-        y = pdf.get_y()
+        pdf.ln(12)
         pdf.set_draw_color(180, 180, 180)
+        y = pdf.get_y()
         pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
-        pdf.ln(15)
-
-        #ort_final = anlage.get("ort", "") Imprimiría Lugar del PV-Anlage
+        pdf.ln(12)
 
         # ======================================================
-        # ORT UND DATUM - SACHVERSTÄNDIGER
+        # SIGNATURE / REPORT IDENTIFICATION
         # ======================================================
 
-        # PLZ + ORT del Sachverständigen
-        plz_ort = str(
-            sach.get("plz_ort", "") or ""
-        ).strip()
-
-        # ======================================================
-        # NUR DEN ORTSNAMEN FÜR "ORT, DATUM" VERWENDEN
-        # ======================================================
-
-        ort_final = plz_ort
-
-        if plz_ort:
-            # Beispiel:
-            # "54321 Musterstadt" -> "Musterstadt"
-            #
-            # Entfernt eine deutsche 5-stellige PLZ am Anfang.
-            ort_final = re.sub(
-                r"^\s*\d{5}\s*",
-                "",
-                plz_ort
-            ).strip()
-
-            print("========== DEBUG ORT ==========")
-            print("PLZ_ORT RECIBIDO:", repr(plz_ort))
-            print("ORT_FINAL CALCULADO:", repr(ort_final))
-            print("================================")
-
-        # ======================================================
-        # DATUM
-        # ======================================================
-
-        datum = datetime.date.today().strftime("%d.%m.%Y")
-
-        print("========== DEBUG DATUM ==========")
-        print("DATUM:", repr(datum))
-        print("ORT_FINAL:", repr(ort_final))
-        print("=================================")
-
-        # ------------------------------------------------------
-        # POSICIONES
-        # ------------------------------------------------------
-
-        base_y = pdf.get_y()
-
-        logo_x = pdf.l_margin
-        logo_y = base_y + 8
-
-        text_x = 55
-        text_y = base_y
-
-        signature_x = text_x
-        signature_y = base_y + 20
-
-        # ======================================================
-        # ORT, DATUM
-        # ======================================================
-
-        pdf.set_xy(
-            text_x,
-            text_y
-        )
-
-        pdf.set_font(
-            "DejaVu",
-            "B",
-            11
-        )
-
-        pdf.cell(
-            0,
-            6,
-            "ORT, DATUM:",
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT
-        )
-
-        pdf.set_x(text_x)
-
-        pdf.set_font(
-            "DejaVu",
-            "",
-            10
-        )
-
-        ort_text = (
-            f"{ort_final}, {datum}"
-            if ort_final
-            else datum
-        )
-
-        pdf.cell(
-            0,
-            6,
-            ort_text,
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT
-        )
-
-
-
-        # ======================================================
-        # LOGO / UNTERSCHRIFT
-        # ======================================================
-        logo = sach.get("logo")
-        logo_path = None
-
-        if logo:
-            try:
-                if "," in logo:
-                    logo = logo.split(",")[1]
-                logo_data = base64.b64decode(logo)
-                logo_path = os.path.join(TEMP_DIR, f"logo_{uuid.uuid4().hex}.png")
-                with open(logo_path, "wb") as f:
-                    f.write(logo_data)
-                pdf.image(logo_path, x=logo_x, y=logo_y, w=28)
-            except Exception as e:
-                print("Logo error:", e)
-
-        pdf.set_xy(text_x, signature_y - 5)
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 6, "UNTERSCHRIFT:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, "Report Identification", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("DejaVu", "", 10)
+        pdf.cell(0, 6, f"Document ID: {document_id}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"Date: {datum}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        if analyst_name:
+            pdf.ln(8)
+            pdf.cell(0, 6, "Prepared by:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font("DejaVu", "B", 10)
+            pdf.cell(0, 6, analyst_name, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font("DejaVu", "", 10)
+            pdf.cell(0, 6, "PV Valuation Analyst", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         signature = sach.get("signature")
         signature_path = None
@@ -2646,35 +2667,24 @@ def pdf():
         if signature:
             try:
                 if "," in signature:
-                    signature = signature.split(",")[1]
+                    signature = signature.split(",", 1)[1]
                 sig_data = base64.b64decode(signature)
-                signature_path = os.path.join(TEMP_DIR, f"signature_{uuid.uuid4().hex}.png")
+                signature_path = os.path.join(
+                    TEMP_DIR,
+                    f"signature_{uuid.uuid4().hex}.png"
+                )
                 with open(signature_path, "wb") as f:
                     f.write(sig_data)
-                pdf.image(signature_path, x=signature_x, y=signature_y, w=45)    
-                # pdf.image(signature_path, x=signature_x, y=signature_y, w=28)
+
+                pdf.ln(5)
+                pdf.image(signature_path, x=pdf.l_margin, w=45)
+                pdf.ln(2)
             except Exception as e:
                 print("Signature error:", e)
 
-        line_y = signature_y + 23
-        pdf.line(signature_x, line_y, signature_x + 65, line_y)
-
-        pdf.set_xy(signature_x, line_y + 3)
-        pdf.set_font("DejaVu", "B", 10)
-        pdf.cell(0, 6, sach.get("name", ""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        pdf.set_font("DejaVu", "", 10)
-        pdf.set_x(signature_x)
-        pdf.cell(0, 6, "Sachverständiger für Photovoltaikanlagen", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_x(signature_x)
-        pdf.cell(0, 6, "Zertifizierungsstelle: _____________", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_x(signature_x)
-        pdf.cell(0, 6, "Zertifikats-Nr.: ___________________", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-        if logo_path and os.path.exists(logo_path):
-            os.remove(logo_path)
-        if signature_path and os.path.exists(signature_path):
-            os.remove(signature_path)
+        # ======================================================
+        # OUTPUT
+        # ======================================================
 
         pdf_output = pdf.output()
         if isinstance(pdf_output, str):
@@ -2683,19 +2693,8 @@ def pdf():
         pdf_buffer = io.BytesIO(pdf_output)
         pdf_buffer.seek(0)
 
-        # ======================================================
-        # SAVE PDF FILE
-        # ======================================================
-
-        pdf_filename = (
-            f"report_{uuid.uuid4().hex}.pdf"
-        )
-
-        pdf_path = os.path.join(
-            TEMP_DIR,
-            pdf_filename
-        )
-
+        pdf_filename = f"pv_valuation_report_{uuid.uuid4().hex}.pdf"
+        pdf_path = os.path.join(TEMP_DIR, pdf_filename)
 
         with open(pdf_path, "wb") as f:
             f.write(pdf_buffer.getvalue())
@@ -2705,49 +2704,39 @@ def pdf():
         # ======================================================
 
         try:
-
-            consume_credit(
-                user,
-                "PDF_WERTGUTACHTEN"
-            )
-
-            print("==============================")
-            print("DEBUG PDF")
-            print("TEMP_DIR:", TEMP_DIR)
-            print("pdf_path:", pdf_path)
-            print("exists:", os.path.exists(pdf_path))
-            print("==============================")
-
+            consume_credit(user, "PDF_WERTGUTACHTEN")
 
             create_report_record(
                 user=user,
                 data=data,
-                filename="PV-WERTGUTACHTEN.pdf",
+                filename="PV-VALUATION-REPORT.pdf",
                 pdf_path=pdf_path
             )
 
-
         except Exception:
-
             db.session.rollback()
-
             raise
 
+        # ======================================================
+        # CLEAN TEMP FILES
+        # ======================================================
 
-        # DELETE TEMP CASHFLOW CHART
         if chart_path and os.path.exists(chart_path):
             os.remove(chart_path)
 
-
-        # DELETE TEMP PIE CHART
         if pie_chart_path and os.path.exists(pie_chart_path):
             os.remove(pie_chart_path)
 
+        if logo_path and os.path.exists(logo_path):
+            os.remove(logo_path)
+
+        if signature_path and os.path.exists(signature_path):
+            os.remove(signature_path)
 
         return send_file(
             pdf_buffer,
             as_attachment=True,
-            download_name="PV-WERTGUTACHTEN.pdf",
+            download_name="PV-VALUATION-REPORT.pdf",
             mimetype="application/pdf"
         )
 
@@ -2757,7 +2746,7 @@ def pdf():
 
         return jsonify({
             "error": str(e)
-        }), 500    
+        }), 500
 
 # ======================================================
 # REPORT HISTORY

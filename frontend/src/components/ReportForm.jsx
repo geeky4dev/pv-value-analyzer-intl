@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCredits } from "../context/CreditsContext";
 
+
 function ReportForm({
   buchwertData,
   ertragswertData,
@@ -12,7 +13,7 @@ function ReportForm({
 }) {
 
   // =====================================================
-  // USUARIO AUTENTICADO (SUPABASE AUTH)
+  // AUTHENTICATED USER (SUPABASE AUTH)
   // =====================================================
 
   const { user } = useAuth();
@@ -20,11 +21,13 @@ function ReportForm({
 
   console.log("AUTH USER:", user);
 
+
   // =====================================================
-  // DATOS DEL SACHVERSTÄNDIGER
+  // VALUATION PROFESSIONAL DATA
   // =====================================================
 
   const [name, setName] = useState("");
+  const [firma, setFirma] = useState("");
   const [adresse, setAdresse] = useState("");
   const [plzOrt, setPlzOrt] = useState("");
   const [phone, setPhone] = useState("");
@@ -36,8 +39,9 @@ function ReportForm({
 
   const [loading, setLoading] = useState(false);
 
+
   // =====================================================
-  // DATOS DEL AUFTRAGGEBER
+  // CLIENT DATA
   // =====================================================
 
   const [kundeName, setKundeName] = useState("");
@@ -46,17 +50,20 @@ function ReportForm({
   const [kundeTelefon, setKundeTelefon] = useState("");
   const [kundeEmail, setKundeEmail] = useState("");
 
+
   // =====================================================
-  // DOCUMENT-ID
+  // DOCUMENT ID
   // =====================================================
 
   const [documentId, setDocumentId] = useState("");
 
+
   // =====================================================
-  // URL DEL BACKEND
+  // BACKEND URL
   // =====================================================
 
   const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 
   // =====================================================
   // LOGO
@@ -78,8 +85,9 @@ function ReportForm({
     }
   };
 
+
   // =====================================================
-  // UNTERSCHRIFT
+  // SIGNATURE
   // =====================================================
 
   const handleSignature = (e) => {
@@ -98,8 +106,9 @@ function ReportForm({
     }
   };
 
+
   // =====================================================
-  // PDF ERSTELLEN
+  // CREATE PDF
   // =====================================================
 
   const handlePDF = async () => {
@@ -107,6 +116,7 @@ function ReportForm({
     try {
 
       setLoading(true);
+
 
       // =====================================================
       // PERFORMANCE RATIO
@@ -117,6 +127,7 @@ function ReportForm({
         ertragswertData?.performanceratio
       );
 
+
       // =====================================================
       // PDF DATA
       // =====================================================
@@ -125,8 +136,9 @@ function ReportForm({
 
         document_id: documentId,
 
+
         // =====================================================
-        // USUARIO AUTENTICADO / SISTEMA DE CRÉDITOS
+        // AUTHENTICATED USER / CREDIT SYSTEM
         // =====================================================
 
         user_id: user?.id || "",
@@ -142,20 +154,16 @@ function ReportForm({
           user?.user_metadata?.company ||
           "",
 
+
         // =====================================================
-        // SACHVERSTÄNDIGER
-        //
-        // Name
-        // Adresse
-        // PLZ Ort
-        // Telefon
-        // E-Mail
-        // Website
+        // VALUATION PROFESSIONAL
         // =====================================================
 
         sachverstaendiger: {
 
           name: name,
+
+          firma: firma,
 
           adresse: adresse,
 
@@ -173,8 +181,9 @@ function ReportForm({
 
         },
 
+
         // =====================================================
-        // AUFTRAGGEBER
+        // CLIENT
         // =====================================================
 
         auftraggeber: {
@@ -191,8 +200,9 @@ function ReportForm({
 
         },
 
+
         // =====================================================
-        // ANLAGENDATEN
+        // SYSTEM DATA
         // =====================================================
 
         anlagendaten: {
@@ -263,15 +273,17 @@ function ReportForm({
 
         },
 
+
         // =====================================================
-        // BUCHWERT
+        // DEPRECIATED ASSET VALUE
         // =====================================================
 
         buchwertData:
           buchwertData || {},
 
+
         // =====================================================
-        // ERTRAGSWERT
+        // PV ECONOMIC VALUE
         // =====================================================
 
         ertragswertData: {
@@ -369,8 +381,9 @@ function ReportForm({
 
         },
 
+
         // =====================================================
-        // RESTWERT
+        // RESIDUAL VALUE
         // =====================================================
 
         restwertData: {
@@ -385,8 +398,8 @@ function ReportForm({
 
           wartung:
             restwertData?.wartung
-              ? "Ja"
-              : "Nein",
+              ? "Yes"
+              : "No",
 
           zustand:
             restwertData?.zustand ||
@@ -417,6 +430,7 @@ function ReportForm({
 
       };
 
+
       // =====================================================
       // DEBUG
       // =====================================================
@@ -432,17 +446,18 @@ function ReportForm({
       );
 
       console.log(
-        "SACHVERSTÄNDIGER:",
+        "VALUATION PROFESSIONAL:",
         pdfData.sachverstaendiger
       );
 
       console.log(
-        "AUFTRAGGEBER:",
+        "CLIENT:",
         pdfData.auftraggeber
       );
 
+
       // =====================================================
-      // VERIFICAR USUARIO
+      // VERIFY USER
       // =====================================================
 
       if (
@@ -451,13 +466,14 @@ function ReportForm({
       ) {
 
         throw new Error(
-          "Usuario Supabase no válido. Inicia sesión nuevamente."
+          "Invalid Supabase user. Please sign in again."
         );
 
       }
 
+
       // =====================================================
-      // ENVIAR PDF AL BACKEND
+      // SEND PDF TO BACKEND
       // =====================================================
 
       const res = await fetch(
@@ -475,8 +491,9 @@ function ReportForm({
         }
       );
 
+
       // =====================================================
-      // ERROR HTTP
+      // HTTP ERROR
       // =====================================================
 
       if (!res.ok) {
@@ -487,8 +504,9 @@ function ReportForm({
 
       }
 
+
       // =====================================================
-      // DESCARGAR PDF
+      // DOWNLOAD PDF
       // =====================================================
 
       const blob =
@@ -503,43 +521,48 @@ function ReportForm({
       a.href = url;
 
       a.download =
-        "PV-Bewertungsbericht_PRO.pdf";
+        "PV-Valuation-Report_PRO.pdf";
 
       a.click();
 
       URL.revokeObjectURL(url);
 
+
       // =====================================================
-      // ACTUALIZAR CREDITS
+      // UPDATE CREDITS
       // =====================================================
 
       await loadCredits();
 
     }
 
+
     catch (err) {
 
       console.error(err);
+
 
       if (
         err.message.includes("402")
       ) {
 
         alert(
-          "Keine Credits verfügbar. Bitte kaufen Sie Credits, um einen neuen PV-Bewertungsbericht zu erstellen."
+          "No credits available. Please purchase credits to create a new PV valuation report."
         );
 
       }
 
+
       else {
 
         alert(
-          `PDF Fehler: ${err.message}. Bitte versuchen Sie es erneut.`
+          `PDF Error: ${err.message}. Please try again.`
         );
 
       }
 
     }
+
 
     finally {
 
@@ -548,6 +571,7 @@ function ReportForm({
     }
 
   };
+
 
   // =====================================================
   // RENDER
@@ -559,32 +583,36 @@ function ReportForm({
 
       <div className="card mb-4 p-3">
 
-        <h5>
-          8. PV-Bewertungsbericht PRO
-        </h5>
+        <h4 className="text-primary fw-bold">
+          8. Professional PV Valuation Report
+        </h4>
+
+
 
         {/* =====================================================
-            SACHVERSTÄNDIGER
+            VALUATION PROFESSIONAL
         ===================================================== */}
 
         <h6 className="mt-3">
-          Bearbeiter / Sachverständiger
+          Analyst / Valuation Professional
         </h6>
+
 
         <form>
 
-          {/* NAME / FIRMA */}
+
+          {/* NAME */}
 
           <div className="mb-2">
 
             <label>
-              Name / Firma:
+              Name:
             </label>
 
             <input
               type="text"
               className="form-control"
-              placeholder="z.B. Max Mustermann / Muster Solar GmbH"
+              placeholder="e.g. John Smith"
               value={name}
               onChange={(e) =>
                 setName(e.target.value)
@@ -593,18 +621,40 @@ function ReportForm({
 
           </div>
 
-          {/* ADRESSE */}
+
+          {/* COMPANY */}
 
           <div className="mb-2">
 
             <label>
-              Adresse:
+              Company:
             </label>
 
             <input
               type="text"
               className="form-control"
-              placeholder="Musterstraße 1"
+              placeholder="e.g. Solar Energy LLC"
+              value={firma}
+              onChange={(e) =>
+                setFirma(e.target.value)
+              }
+            />
+
+          </div>
+
+
+          {/* ADDRESS */}
+
+          <div className="mb-2">
+
+            <label>
+              Address:
+            </label>
+
+            <input
+              type="text"
+              className="form-control"
+              placeholder="e.g. 123 Solar Street"
               value={adresse}
               onChange={(e) =>
                 setAdresse(e.target.value)
@@ -613,18 +663,19 @@ function ReportForm({
 
           </div>
 
-          {/* PLZ ORT */}
+
+          {/* POSTAL CODE / CITY */}
 
           <div className="mb-2">
 
             <label>
-              PLZ Ort:
+              Postal Code / City:
             </label>
 
             <input
               type="text"
               className="form-control"
-              placeholder="54321 Musterstadt"
+              placeholder="e.g. 12345 New York"
               value={plzOrt}
               onChange={(e) =>
                 setPlzOrt(e.target.value)
@@ -633,18 +684,19 @@ function ReportForm({
 
           </div>
 
-          {/* TELEFON */}
+
+          {/* PHONE */}
 
           <div className="mb-2">
 
             <label>
-              Telefon:
+              Phone:
             </label>
 
             <input
               type="tel"
               className="form-control"
-              placeholder="055 12345678"
+              placeholder="e.g. +1 555 123 4567"
               value={phone}
               onChange={(e) =>
                 setPhone(e.target.value)
@@ -653,18 +705,19 @@ function ReportForm({
 
           </div>
 
-          {/* E-MAIL */}
+
+          {/* EMAIL */}
 
           <div className="mb-2">
 
             <label>
-              E-Mail:
+              Email:
             </label>
 
             <input
               type="email"
               className="form-control"
-              placeholder="info@mustersolar.de"
+              placeholder="e.g. info@solarexample.com"
               value={email}
               onChange={(e) =>
                 setEmail(e.target.value)
@@ -672,6 +725,7 @@ function ReportForm({
             />
 
           </div>
+
 
           {/* WEBSITE */}
 
@@ -684,7 +738,7 @@ function ReportForm({
             <input
               type="url"
               className="form-control"
-              placeholder="www.mustersolar.de"
+              placeholder="e.g. www.solarexample.com"
               value={website}
               onChange={(e) =>
                 setWebsite(e.target.value)
@@ -693,6 +747,7 @@ function ReportForm({
 
           </div>
 
+
           {/* =====================================================
               LOGO
           ===================================================== */}
@@ -700,7 +755,7 @@ function ReportForm({
           <div className="mb-3">
 
             <label className="fw-bold">
-              Firmenlogo:
+              Company Logo:
             </label>
 
             <input
@@ -713,11 +768,12 @@ function ReportForm({
             <div className="form-text text-muted">
 
               <strong>
-                PNG, JPEG oder SVG
+                PNG, JPEG or SVG
               </strong>{" "}
-              (für beste Qualität)
+              (recommended for best quality)
 
             </div>
+
 
             {logo && (
 
@@ -730,7 +786,7 @@ function ReportForm({
 
                 <img
                   src={logo}
-                  alt="Logo Vorschau"
+                  alt="Logo Preview"
                   style={{
                     maxHeight: "60px",
                     maxWidth: "150px",
@@ -744,14 +800,15 @@ function ReportForm({
 
           </div>
 
+
           {/* =====================================================
-              UNTERSCHRIFT
+              SIGNATURE
           ===================================================== */}
 
           <div className="mb-4">
 
             <label className="fw-bold">
-              Digitale Unterschrift (Sachverständiger):
+              Digital Signature (Valuation Professional):
             </label>
 
             <input
@@ -764,11 +821,12 @@ function ReportForm({
             <div className="form-text text-muted">
 
               <strong>
-                PNG oder JPEG
+                PNG or JPEG
               </strong>{" "}
-              (PNG-Transparenz empfohlen)
+              (PNG transparency recommended)
 
             </div>
+
 
             {signature && (
 
@@ -780,12 +838,12 @@ function ReportForm({
               >
 
                 <p className="small text-muted mb-1">
-                  Vorschau der Unterschrift:
+                  Signature Preview:
                 </p>
 
                 <img
                   src={signature}
-                  alt="Unterschrift Vorschau"
+                  alt="Signature Preview"
                   style={{
                     maxHeight: "80px",
                     maxWidth: "200px",
@@ -799,26 +857,28 @@ function ReportForm({
 
           </div>
 
+
           {/* =====================================================
-              AUFTRAGGEBER
+              CLIENT
           ===================================================== */}
 
           <h5 className="mt-4">
-            Auftraggeber
+            Client
           </h5>
+
 
           {/* NAME */}
 
           <div className="mb-2">
 
             <label>
-              Name des Kunden:
+              Client Name:
             </label>
 
             <input
               type="text"
               className="form-control"
-              placeholder="z.B. Frau Erika Müller"
+              placeholder="e.g. Jane Smith"
               value={kundeName}
               onChange={(e) =>
                 setKundeName(e.target.value)
@@ -827,18 +887,19 @@ function ReportForm({
 
           </div>
 
-          {/* ADRESSE */}
+
+          {/* ADDRESS */}
 
           <div className="mb-2">
 
             <label>
-              Adresse des Kunden:
+              Client Address:
             </label>
 
             <input
               type="text"
               className="form-control"
-              placeholder="Teststraße 25"
+              placeholder="e.g. 25 Solar Avenue"
               value={kundeAdresse}
               onChange={(e) =>
                 setKundeAdresse(e.target.value)
@@ -847,18 +908,19 @@ function ReportForm({
 
           </div>
 
-          {/* PLZ ORT */}
+
+          {/* POSTAL CODE / CITY */}
 
           <div className="mb-2">
 
             <label>
-              PLZ Ort:
+              Postal Code / City:
             </label>
 
             <input
               type="text"
               className="form-control"
-              placeholder="10115 Berlin"
+              placeholder="e.g. 10001 New York"
               value={kundePlzOrt}
               onChange={(e) =>
                 setKundePlzOrt(e.target.value)
@@ -867,18 +929,19 @@ function ReportForm({
 
           </div>
 
-          {/* TELEFON */}
+
+          {/* PHONE */}
 
           <div className="mb-2">
 
             <label>
-              Telefon:
+              Phone:
             </label>
 
             <input
               type="tel"
               className="form-control"
-              placeholder="030 12345678"
+              placeholder="e.g. +1 555 987 6543"
               value={kundeTelefon}
               onChange={(e) =>
                 setKundeTelefon(e.target.value)
@@ -887,18 +950,19 @@ function ReportForm({
 
           </div>
 
-          {/* E-MAIL */}
+
+          {/* EMAIL */}
 
           <div className="mb-2">
 
             <label>
-              E-Mail:
+              Email:
             </label>
 
             <input
               type="email"
               className="form-control"
-              placeholder="kunde@email.de"
+              placeholder="e.g. client@email.com"
               value={kundeEmail}
               onChange={(e) =>
                 setKundeEmail(e.target.value)
@@ -907,20 +971,21 @@ function ReportForm({
 
           </div>
 
+
           {/* =====================================================
-              DOKUMENT-ID
+              DOCUMENT ID
           ===================================================== */}
 
           <div className="mb-2">
 
             <label className="fw-bold">
-              Dokument-ID:
+              Document ID:
             </label>
 
             <input
               type="text"
               className="form-control"
-              placeholder="Interne Referenznummer (z. B. PV-2026-001)"
+              placeholder="Internal reference number (e.g. PV-2026-001)"
               value={documentId}
               onChange={(e) =>
                 setDocumentId(e.target.value)
@@ -928,6 +993,7 @@ function ReportForm({
             />
 
           </div>
+
 
           {/* =====================================================
               PDF BUTTON
@@ -941,14 +1007,16 @@ function ReportForm({
           >
 
             {loading
-              ? "Generiere PDF..."
-              : "PDF-Report erstellen"}
+              ? "Generating PDF..."
+              : "Create PDF Report"}
 
           </button>
+
 
         </form>
 
       </div>
+
 
       {/* =====================================================
           DEBUG INPUT DATA
@@ -980,7 +1048,8 @@ function ReportForm({
     </>
 
   );
+
 }
 
-export default ReportForm;
 
+export default ReportForm;

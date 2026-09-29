@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 
-
 function PaymentSuccess() {
 
     const [payment, setPayment] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
+
 
 
     // =====================================================
@@ -33,7 +33,7 @@ function PaymentSuccess() {
                 if (!sessionId) {
 
                     setError(
-                        "Keine Stripe-Session-ID gefunden."
+                        "No Stripe session ID was found."
                     );
 
                     setLoading(false);
@@ -55,16 +55,14 @@ function PaymentSuccess() {
                 // -----------------------------------------
 
                 const response = await fetch(
-
                     `${backendUrl}/stripe/checkout-session/${sessionId}`
-
                 );
 
 
                 if (!response.ok) {
 
                     throw new Error(
-                        "Zahlung konnte nicht überprüft werden."
+                        "Payment could not be verified."
                     );
                 }
 
@@ -76,7 +74,7 @@ function PaymentSuccess() {
                 if (!data.paid) {
 
                     setError(
-                        "Die Zahlung wurde noch nicht bestätigt."
+                        "The payment has not yet been confirmed."
                     );
 
                     setLoading(false);
@@ -90,6 +88,7 @@ function PaymentSuccess() {
                 // -----------------------------------------
 
                 setPayment(data);
+
 
                 // -----------------------------------------
                 // GA4 PURCHASE + META PURCHASE
@@ -117,7 +116,6 @@ function PaymentSuccess() {
                             "event",
                             "purchase",
                             {
-
                                 transaction_id:
                                     data.transaction_id,
 
@@ -128,9 +126,7 @@ function PaymentSuccess() {
                                     data.currency,
 
                                 items: [
-
                                     {
-
                                         item_name:
                                             `PV-Valuator PRO ${data.package}`,
 
@@ -142,11 +138,8 @@ function PaymentSuccess() {
 
                                         price:
                                             data.value
-
                                     }
-
                                 ]
-
                             }
                         );
 
@@ -163,13 +156,11 @@ function PaymentSuccess() {
                             "track",
                             "Purchase",
                             {
-
                                 value:
                                     data.value,
 
                                 currency:
                                     data.currency
-
                             }
                         );
 
@@ -196,7 +187,7 @@ function PaymentSuccess() {
 
                 setError(
                     err.message ||
-                    "Zahlung konnte nicht überprüft werden."
+                    "Payment could not be verified."
                 );
 
             } finally {
@@ -221,23 +212,95 @@ function PaymentSuccess() {
 
         return (
 
-            <div className="container mt-5 text-center">
+            <div
+                style={{
+                    minHeight: "100vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    backgroundColor: "#03111D"
+                }}
+            >
 
-                <div className="spinner-border text-primary mb-4">
-                </div>
+                <main className="flex-grow-1">
 
-                <h4>
-                    Zahlung wird überprüft...
-                </h4>
+                    <div className="container mt-5 text-center">
 
-                <p className="text-muted">
-                    Bitte warten Sie einen Moment.
-                </p>
+                        <div className="spinner-border text-primary mb-4">
+                        </div>
+
+                        <h4 className="text-white">
+                            Verifying payment...
+                        </h4>
+
+                        <p
+                            style={{
+                                color: "rgba(255, 255, 255, 0.2)"
+                            }}
+                        >
+                            Please wait a moment.
+                        </p>
+
+                    </div>
+
+                </main>
+
+
+                {/* FOOTER */}
+
+                <footer
+                    className="py-3"
+                    style={{
+                        width: "100%",
+                        backgroundColor: "#03111D"
+                    }}
+                >
+
+                    <div className="container-fluid">
+
+                        <div
+                            className="
+                                d-flex
+                                justify-content-center
+                                align-items-center
+                                gap-3
+                                flex-wrap
+                            "
+                        >
+
+                            <img
+                                src="/logo-apps4green.png"
+                                alt="Apps For Green"
+                                style={{
+                                    height: "30px"
+                                }}
+                            />
+
+                            <span className="text-white-50 small">
+                                © 2026 Apps For Green
+                            </span>
+
+                            <span className="text-white-50">
+                                ·
+                            </span>
+
+                            <a
+                                href="https://www.apps4green.com"
+                                className="text-primary text-decoration-none small"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                www.apps4green.com
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </footer>
 
             </div>
 
         );
-
     }
 
 
@@ -249,60 +312,142 @@ function PaymentSuccess() {
 
         return (
 
-            <div className="container mt-5 text-center">
+            <div
+                style={{
+                    minHeight: "100vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    backgroundColor: "#03111D"
+                }}
+            >
 
-                <div className="d-flex justify-content-center mt-4 mb-4">
+                <main className="flex-grow-1">
 
-                    <a
-                        href="/"
-                        className="btn btn-primary text-white"
-                    >
+                    <div className="container mt-5 text-center">
 
-                        <i className="bi bi-arrow-left me-2 text-white"></i>
+                        {/* Home Button */}
 
-                        <span className="text-white">
-                            Startseite
-                        </span>
+                        <div className="d-flex justify-content-center mt-4 mb-4">
 
-                    </a>
+                            <a
+                                href="/"
+                                className="btn btn-primary text-white"
+                            >
 
-                </div>
+                                <i className="bi bi-arrow-left me-2 text-white"></i>
 
+                                <span className="text-white">
+                                    Home
+                                </span>
 
-                <h2 className="display-6 text-primary fw-bold">
+                            </a>
 
-                    PV-Valuator
-
-                    <span className="badge bg-info ms-2">
-                        PRO
-                    </span>
-
-                </h2>
-
-
-                <p className="text-muted fst-italic fs-5 mb-5">
-
-                    Professionelle Wirtschaftlichkeitsanalyse
-                    für Photovoltaikanlagen
-
-                </p>
+                        </div>
 
 
-                <h3 className="text-danger fw-bold">
+                        {/* Product Name */}
 
-                    ❌ Zahlung konnte nicht bestätigt werden
+                        <h2 className="text-primary fw-bold">
+                        
+                            PV-Valuator
 
-                </h3>
+                            <span className="badge bg-info ms-2">
+                                PRO
+                            </span>
+
+                        </h2>
 
 
-                <p className="mt-4">
-                    {error}
-                </p>
+                        {/* Product Description */}
+
+                        <p
+                            className="fst-italic mt-2"
+                            style={{ color: "rgba(255, 255, 255, 0.2)" }}
+                        >
+                            Professional Financial Analysis
+                            for Photovoltaic Systems
+                        </p>
+
+
+                        {/* Error */}
+
+                        <h3 className="text-danger fw-bold">
+
+                            ❌ Payment could not be confirmed
+
+                        </h3>
+
+
+                        <p
+                            className="mt-4"
+                            style={{
+                                color: "rgba(255, 255, 255, 0.2)"
+                            }}
+                        >
+                            {error}
+                        </p>
+
+                    </div>
+
+                </main>
+
+
+                {/* FOOTER */}
+
+                <footer
+                    className="py-3"
+                    style={{
+                        width: "100%",
+                        backgroundColor: "#03111D"
+                    }}
+                >
+
+                    <div className="container-fluid">
+
+                        <div
+                            className="
+                                d-flex
+                                justify-content-center
+                                align-items-center
+                                gap-3
+                                flex-wrap
+                            "
+                        >
+
+                            <img
+                                src="/logo-apps4green.png"
+                                alt="Apps For Green"
+                                style={{
+                                    height: "30px"
+                                }}
+                            />
+
+                            <span className="text-white-50 small">
+                                © 2026 Apps For Green
+                            </span>
+
+                            <span className="text-white-50">
+                                ·
+                            </span>
+
+                            <a
+                                href="https://www.apps4green.com"
+                                className="text-primary text-decoration-none small"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                www.apps4green.com
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </footer>
 
             </div>
 
         );
-
     }
 
 
@@ -312,106 +457,182 @@ function PaymentSuccess() {
 
     return (
 
-        <div className="container mt-5 text-center">
+        <div
+            style={{
+                minHeight: "100vh",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "#03111D"
+            }}
+        >
+
+            <main className="flex-grow-1">
+
+                <div className="container mt-5 text-center">
+
+                    {/* Home Button */}
+
+                    <div className="d-flex justify-content-center mt-4 mb-4">
+
+                        <a
+                            href="/"
+                            className="btn btn-primary text-white"
+                        >
+
+                            <i className="bi bi-arrow-left me-2 text-white"></i>
+
+                            <span className="text-white">
+                                Home
+                            </span>
+
+                        </a>
+
+                    </div>
 
 
-            {/* Startseite Button */}
+                    {/* Product Name */}
 
-            <div className="d-flex justify-content-center mt-4 mb-4">
+                    <h2 className="text-primary fw-bold">
 
-                <a
-                    href="/"
-                    className="btn btn-primary text-white"
-                >
+                        PV-Valuator
 
-                    <i className="bi bi-arrow-left me-2 text-white"></i>
+                        <span className="badge bg-info ms-2">
+                            PRO
+                        </span>
 
-                    <span className="text-white">
-                        Startseite
-                    </span>
-
-                </a>
-
-            </div>
+                    </h2>
 
 
-            {/* Produktname */}
+                    {/* Product Description */}
 
-            <h2 className="display-6 text-primary fw-bold">
-
-                PV-Valuator
-
-                <span className="badge bg-info ms-2">
-                    PRO
-                </span>
-
-            </h2>
-
-
-            {/* Produktbeschreibung */}
-
-            <p className="text-muted fst-italic fs-5 mb-5">
-
-                Professionelle Wirtschaftlichkeitsanalyse
-                für Photovoltaikanlagen
-
-            </p>
-
-
-            {/* Erfolgsmeldung */}
-
-            <h3 className="text-success fw-bold">
-
-                ✅ Zahlung erfolgreich
-
-            </h3>
-
-
-            <p className="mt-4 fs-5">
-
-                Vielen Dank für Ihren Kauf.
-
-            </p>
-
-
-            <p className="text-muted">
-
-                Ihre Credits wurden Ihrem Konto gutgeschrieben.
-
-            </p>
-
-
-            {/* Kaufdetails */}
-
-            {payment && (
-
-                <div className="mt-4">
-
-                    <p>
-                        <strong>Paket:</strong>{" "}
-                        {payment.package}
+                    <p
+                        className="fst-italic mt-2"
+                        style={{
+                            color: "rgba(255, 255, 255, 0.2)"
+                        }}
+                    >
+                        Professional Financial Analysis
+                        for Photovoltaic Systems
                     </p>
 
-                    <p>
-                        <strong>Credits:</strong>{" "}
-                        {payment.credits}
+
+                    {/* Success Message */}
+
+                    <h3 className="text-success fw-bold">
+
+                        ✅ Payment Successful
+
+                    </h3>
+
+
+                    <p
+                        className="mt-3"
+                        style={{
+                            color: "rgba(255, 255, 255, 0.85)"
+                        }}
+                    >
+                        Thank you for your purchase.
                     </p>
 
-                    <p>
-                        <strong>Betrag:</strong>{" "}
-                        {Number(payment.value).toFixed(2)}{" "}
-                        {payment.currency}
+
+                    <p
+                        style={{
+                            color: "rgba(255, 255, 255, 0.2)"
+                        }}
+                    >
+                        Your credits have been added to your account.
                     </p>
+
+
+                    {/* Purchase Details */}
+
+                    {payment && (
+
+                        <div className="mt-4">
+
+                            <p className="text-white-50">
+                                <strong>Package:</strong>{" "}
+                                {payment.package}
+                            </p>
+
+                            <p className="text-white-50">
+                                <strong>Credits:</strong>{" "}
+                                {payment.credits}
+                            </p>
+
+                            <p className="text-white-50">
+                                <strong>Amount:</strong>{" "}
+                                {Number(payment.value).toFixed(2)}{" "}
+                                {payment.currency}
+                            </p>
+
+                        </div>
+
+                    )}
 
                 </div>
 
-            )}
+            </main>
+
+
+            {/* =============================================
+                FOOTER
+            ============================================= */}
+
+            <footer
+                className="py-3"
+                style={{
+                    width: "100%",
+                    backgroundColor: "#03111D"
+                }}
+            >
+
+                <div className="container-fluid">
+
+                    <div
+                        className="
+                            d-flex
+                            justify-content-center
+                            align-items-center
+                            gap-3
+                            flex-wrap
+                        "
+                    >
+
+                        <img
+                            src="/logo-apps4green.png"
+                            alt="Apps For Green"
+                            style={{
+                                height: "30px"
+                            }}
+                        />
+
+                        <span className="text-white-50 small">
+                            © 2026 Apps For Green
+                        </span>
+
+                        <span className="text-white-50">
+                            ·
+                        </span>
+
+                        <a
+                            href="https://www.apps4green.com"
+                            className="text-primary text-decoration-none small"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            www.apps4green.com
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </footer>
 
         </div>
 
     );
-
 }
-
 
 export default PaymentSuccess;

@@ -72,7 +72,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
 
   return (
     <div className="card mb-4 p-3 shadow-sm">
-      <h4 className="border-bottom pb-2 text-primary fw-bold">1. Anlagendaten</h4>
+      <h4 className="border-bottom pb-2 text-primary fw-bold">1. System Information</h4>
 
       <div className="accordion mt-3" id="anlagenAccordion">
 
@@ -91,7 +91,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
               aria-expanded="true"
               aria-controls="collapseGeneral"
             >
-              1.1. Allgemeine Angaben
+              1.1. General Information
             </button>
           </h2>
 
@@ -106,19 +106,19 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
               <div className="row g-2">
 
                 <div className="col-md-12">
-                  <label>1.1.1 Adresse:</label>
+                  <label>1.1.1 Address:</label>
                   <input
                     type="text"
                     className="form-control"
                     name="adresse"
                     value={formData.adresse}
                     onChange={handleChange}
-                    placeholder="Musterstraße 1"
+                    placeholder="123 Solar Street"
                   />
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.1.2 PLZ:</label>
+                  <label>1.1.2 ZIP / Postal Code:</label>
                   <input
                     type="text"
                     className="form-control"
@@ -130,79 +130,79 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.1.3 Ort:</label>
+                  <label>1.1.3 City:</label>
                   <input
                     type="text"
                     className="form-control"
                     name="ort"
                     value={formData.ort}
                     onChange={handleChange}
-                    placeholder="Musterstadt"
+                    placeholder="City"
                   />
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.1.4 Bundesland:</label>
+                  <label>1.1.4 State / Region:</label>
                   <input
                     type="text"
                     className="form-control"
                     name="bundesland"
                     value={formData.bundesland}
                     onChange={handleChange}
-                    placeholder="Bundesland angeben"
+                    placeholder="State or region"
                   />
                 </div>
 
                 <div className="col-md-12">
-                  <label>1.1.5 Firma:</label>
+                  <label>1.1.5 Company:</label>
                   <input
                     type="text"
                     className="form-control"
                     name="firma"
                     value={formData.firma}
                     onChange={handleChange}
-                    placeholder="Musterfirma GmbH"
+                    placeholder="Company name"
                   />
                 </div>
 
                 <div className="col-md-6">
-                  <label>1.1.6 E-Mail:</label>
+                  <label>1.1.6 Email:</label>
                   <input
                     type="email"
                     className="form-control"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="info@musterfirma.de"
+                    placeholder="info@company.com"
                   />
                 </div>
 
                 <div className="col-md-6">
-                  <label>1.1.7 Telefon:</label>
+                  <label>1.1.7 Phone:</label>
                   <input
                     type="text"
                     className="form-control"
                     name="telefon"
                     value={formData.telefon}
                     onChange={handleChange}
-                    placeholder="055 12345678"
+                    placeholder="e.g. +1 555 123 4567"
                   />
                 </div>
 
                 <div className="col-md-6">
-                  <label>1.1.8 Anlagenleistung (kWp):</label>
+                  <label>1.1.8 System Size (kWp):</label>
                   <input
                     type="number"
                     className="form-control"
                     name="leistung"
                     value={formData.leistung}
                     onChange={handleChange}
-                    placeholder="z.B. 10"
+                    placeholder="e.g. 10"
                   />
                 </div>
 
                 <div className="col-md-6">
-                  <label>1.1.9 Inbetriebnahme (Monat/Jahr):</label>
+                  <label>1.1.9 Installation Date:</label>
                   <input
                     type="month"
                     className="form-control"
@@ -234,7 +234,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
               aria-expanded="false"
               aria-controls="collapseTechnical"
             >
-              1.2. Technische Details
+              1.2. Technical Details
             </button>
           </h2>
 
@@ -249,7 +249,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
               <div className="row g-2">
 
                 <div className="col-md-4">
-                  <label>1.2.1 Modultyp:</label>
+                  <label>1.2.1 Module Type:</label>
 
                   <select
                     className="form-select"
@@ -257,29 +257,29 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     value={formData.modultyp}
                     onChange={handleChange}
                   >
-                    <option value="">Bitte auswählen</option>
+                    <option value="">Please select</option>
 
                     <option value="Monokristallin">
-                      Monokristallin
+                      Monocrystalline
                     </option>
 
                     <option value="Polykristallin">
-                      Polykristallin
+                      Polycrystalline
                     </option>
 
                     <option value="Dünnschicht">
-                      Dünnschicht
+                      Thin-film
                     </option>
 
                     <option value="Bifazial">
-                      Bifazial
+                      Bifacial
                     </option>
 
                   </select>
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.2.2 Hersteller Module:</label>
+                  <label>1.2.2 Module Manufacturer:</label>
                   <input
                     type="text"
                     className="form-control"
@@ -290,7 +290,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.2.3 Modell Module:</label>
+                  <label>1.2.3 Module Model:</label>
                   <input
                     type="text"
                     className="form-control"
@@ -301,25 +301,43 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.2.4 Wechselrichtertyp:</label>
+                  <label>1.2.4 Inverter Type:</label>
                   <select
                     className="form-select"
                     name="wrtyp"
                     value={formData.wrtyp}
                     onChange={handleChange}
                   >
-                    <option value="">Bitte auswählen</option>
-                    <option value="Stringwechselrichter">Stringwechselrichter</option>
-                    <option value="Zentralwechselrichter">Zentralwechselrichter</option>
-                    <option value="Zentralwechselrichter">Modulwechselrichter</option>
-                    <option value="Mikrowechselrichter">Mikrowechselrichter</option>
-                    <option value="Hybridwechselrichter">Hybridwechselrichter</option>
-                    <option value="Inselwechselrichter">Inselwechselrichter</option>
+                    <option value="">Please select</option>
+
+                    <option value="Stringwechselrichter">
+                      String Inverter
+                    </option>
+
+                    <option value="Zentralwechselrichter">
+                      Central Inverter
+                    </option>
+
+                    <option value="Modulwechselrichter">
+                      Module Inverter
+                    </option>
+
+                    <option value="Mikrowechselrichter">
+                      Microinverter
+                    </option>
+
+                    <option value="Hybridwechselrichter">
+                      Hybrid Inverter
+                    </option>
+
+                    <option value="Inselwechselrichter">
+                      Off-grid Inverter
+                    </option>
                   </select>
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.2.5 Hersteller WR:</label>
+                  <label>1.2.5 Inverter Manufacturer:</label>
                   <input
                     type="text"
                     className="form-control"
@@ -330,7 +348,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.2.6 Modell WR:</label>
+                  <label>1.2.6 Inverter Model:</label>
                   <input
                     type="text"
                     className="form-control"
@@ -341,7 +359,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.2.7 WR Installationsjahr:</label>
+                  <label>1.2.7 Inverter Installation Year:</label>
                   <input
                     type="number"
                     className="form-control"
@@ -367,33 +385,33 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                       className="form-check-label"
                       htmlFor="wraustausch"
                     >
-                      1.2.8 Austausch bereits erfolgt? (
-                      {formData.wraustausch}
+                      1.2.8 Has the inverter already been replaced? (
+                      {formData.wraustausch === "Ja" ? "Yes" : "No"}
                       )
                     </label>
                   </div>
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.2.9 Installationsart:</label>
+                  <label>1.2.9 Installation Type:</label>
                   <select
                     className="form-select"
                     name="installationsart"
                     value={formData.installationsart}
                     onChange={handleChange}
                   >
-                    <option value="">Bitte auswählen</option>
-                    <option value="Schrägdach">Schrägdach</option>
-                    <option value="Flachdach">Flachdach</option>
-                    <option value="Freifläche">Freifläche</option>
+                    <option value="">Please select</option>
+                    <option value="Schrägdach">Pitched Roof</option>
+                    <option value="Flachdach">Flat Roof</option>
+                    <option value="Freifläche">Ground-mounted</option>
                     <option value="Carport">Carport</option>
-                    <option value="Fassade">Fassade</option>
+                    <option value="Fassade">Facade</option>
                   </select>
                 </div>
 
                 <div className="col-md-6">
                   <label>
-                    1.2.10 Dachneigung / Modulneigung (°):
+                    1.2.10 Roof / Module Tilt (°):
                   </label>
                   <input
                     type="number"
@@ -401,22 +419,22 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="dachneigung"
                     value={formData.dachneigung}
                     onChange={handleChange}
-                    placeholder="z.B. 30"
+                    placeholder="e.g. 30"
                   />
                 </div>
 
                 <div className="col-md-6">
                   <label className="d-flex align-items-center gap-2">
-                    1.2.11 Ausrichtung / Azimut (°)
+                    1.2.11 Orientation / Azimuth (°)
                     <i
                       className="bi bi-info-circle text-primary"
                       data-bs-toggle="tooltip"
                       data-bs-placement="top"
-                      title={`Azimut:
-                  0° / 360° = Norden
-                  180° = Süden
-                  90° = Osten
-                  270° = Westen`}
+                      title={`Azimuth:
+                    0° / 360° = North
+                    180° = South
+                    90° = East
+                    270° = West`}
                       style={{ cursor: "pointer" }}
                     ></i>
                   </label>
@@ -426,7 +444,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                     name="azimut"
                     value={formData.azimut}
                     onChange={handleChange}
-                    placeholder="z.B. 180"
+                    placeholder="e.g. 180"
                   />
                 </div>
 
@@ -452,10 +470,9 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
               aria-expanded="false"
               aria-controls="collapseLocation"
             >
-              1.3. Standortdaten (Falls unbekannt, mit PVGIS unten ermitteln)
+              1.3. Location Data (If unknown, use the PVGIS tool below)
             </button>
           </h2>
-
           <div
             id="collapseLocation"
             className="accordion-collapse collapse"
@@ -468,7 +485,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
 
                 <div className="col-md-6">
                   <label>
-                    1.3.1 Breitengrad z.B. 48.1374 (München)
+                    1.3.1 Latitude (e.g. 40.7128)
                   </label>
                   <input
                     type="number"
@@ -482,7 +499,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
 
                 <div className="col-md-6">
                   <label>
-                    1.3.2 Längengrad z.B. 11.5755 (München)
+                    1.3.2 Longitude (e.g. -74.0060)
                   </label>
                   <input
                     type="number"
@@ -516,7 +533,7 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
               aria-expanded="false"
               aria-controls="collapseMaintenance"
             >
-              1.4. Zustand & Wartung
+              1.4. Condition & Maintenance
             </button>
           </h2>
 
@@ -531,23 +548,23 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
               <div className="row g-2">
 
                 <div className="col-md-4">
-                  <label>1.4.1 Zustand:</label>
+                  <label>1.4.1 System Condition:</label>
                   <select
                     className="form-select"
                     name="zustand"
                     value={formData.zustand}
                     onChange={handleChange}
                   >
-                    <option value="">Bitte auswählen</option>
-                    <option value="Sehr gut">Sehr gut</option>
-                    <option value="Gut">Gut</option>
-                    <option value="Mittel">Mittel</option>
-                    <option value="Schlecht">Schlecht</option>
+                    <option value="">Please select</option>
+                    <option value="Sehr gut">Very Good</option>
+                    <option value="Gut">Good</option>
+                    <option value="Mittel">Average</option>
+                    <option value="Schlecht">Poor</option>
                   </select>
                 </div>
 
                 <div className="col-md-4">
-                  <label>1.4.2 Letzte Wartung:</label>
+                  <label>1.4.2 Last Maintenance:</label>
                   <input
                     type="month"
                     className="form-control"
@@ -573,15 +590,15 @@ function AnlagenDaten({ onDataChange, betriebsmodell, anlagenData }) {
                       className="form-check-label"
                       htmlFor="wartungsvertrag"
                     >
-                      1.4.3 Wartungsvertrag? (
-                      {formData.wartungsvertrag}
+                      1.4.3 Maintenance Contract? (
+                      {formData.wartungsvertrag === "Ja" ? "Yes" : "No"}
                       )
                     </label>
                   </div>
                 </div>
 
                 <div className="col-md-12">
-                  <label>1.4.4 Bekannte Probleme:</label>
+                  <label>1.4.4 Known Issues:</label>
                   <textarea
                     className="form-control"
                     name="probleme"

@@ -9,7 +9,7 @@ function Home() {
   const [checkoutError, setCheckoutError] = useState("");
 
   // ==========================================
-  // PACKAGE AUS URL LESEN
+  // READ PACKAGE FROM URL
   // ==========================================
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -18,7 +18,7 @@ function Home() {
     if (packageParam) {
       const normalizedPackage = packageParam.toLowerCase();
 
-      // Nur erlaubte Pakete akzeptieren
+      // Accept only allowed packages
       const allowedPackages = [
         "starter",
         "professional",
@@ -29,7 +29,7 @@ function Home() {
       if (allowedPackages.includes(normalizedPackage)) {
         setPackageKey(normalizedPackage);
       } else {
-        setCheckoutError("Ungültiges Paket.");
+        setCheckoutError("Invalid package.");
       }
     }
   }, []);
@@ -68,16 +68,16 @@ function Home() {
 
         if (!response.ok) {
           throw new Error(
-            data.error || "Stripe Checkout konnte nicht erstellt werden."
+            data.error || "Stripe Checkout could not be created."
           );
         }
 
         if (!data.checkout_url) {
-          throw new Error("Keine Checkout-URL von Stripe erhalten.");
+          throw new Error("No Checkout URL was received from Stripe.");
         }
 
         // ==================================
-        // WEITER ZU STRIPE
+        // REDIRECT TO STRIPE
         // ==================================
         window.location.href = data.checkout_url;
       } catch (error) {
@@ -97,9 +97,13 @@ function Home() {
     return (
       <div className="container mt-5 text-center">
         <div className="spinner-border text-primary"></div>
-        <h3 className="mt-4">Zahlung wird vorbereitet...</h3>
+
+        <h3 className="mt-4">
+          Preparing your payment...
+        </h3>
+
         <p className="text-muted">
-          Sie werden sicher zu Stripe weitergeleitet.
+          You will be securely redirected to Stripe.
         </p>
       </div>
     );
@@ -112,28 +116,32 @@ function Home() {
     return (
       <div className="container mt-5 text-center">
         <h2 className="text-danger">
-          Zahlung konnte nicht vorbereitet werden
+          Payment could not be prepared
         </h2>
-        <p className="mt-3">{checkoutError}</p>
+
+        <p className="mt-3">
+          {checkoutError}
+        </p>
+
         <a href="/" className="btn btn-primary mt-3">
-          Zur Startseite
+          Home
         </a>
       </div>
     );
   }
 
   // ==========================================
-  // NORMALE HOME-SEITE
+  // NORMAL HOME PAGE
   // ==========================================
   return (
     <div className="container mt-2 min-vh-100">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <a
-          href="https://www.pv-valuator.de/"
+          href="https://www.pv-valuator.com/"
           className="btn btn-primary text-white"
         >
           <i className="bi bi-arrow-left me-2 text-white"></i>
-          <span className="text-white">Startseite</span>
+          <span className="text-white">Home</span>
         </a>
 
         <UserMenu />
@@ -142,8 +150,8 @@ function Home() {
       <hr
         className="w-100 m-0 border-secondary-subtle"
         style={{
-          borderTop: "5px solid",
-          opacity: 0.3
+          borderTop: "1px solid",
+          opacity: 0.1
         }}
       />
 
@@ -152,15 +160,17 @@ function Home() {
         <span className="badge bg-info ms-2">PRO</span>
       </h1>
 
-      <p className="text-center text-muted fst-italic fs-5">
-        Professionelle Wirtschaftlichkeitsanalyse für Photovoltaikanlagen
+      <p className="mb-4 text-white-50 fst-italic text-center fs-5">
+        Professional Financial Analysis for Photovoltaic Systems
       </p>
 
-      <p className="text-center text-muted">Willkommen zurück.</p>
+      <p className="mb-4 text-white-50 fst-italic text-center fs-5">
+        Welcome back.
+      </p>
 
       <div className="text-center mt-4">
         <a href="/analyse" className="btn btn-primary">
-          Neue Analyse starten
+          Start New Analysis
         </a>
       </div>
     </div>
