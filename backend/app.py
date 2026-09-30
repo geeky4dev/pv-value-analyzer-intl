@@ -47,15 +47,7 @@ load_dotenv()
 # TEMP DIRECTORY FOR PDF FILES
 # ======================================================
 
-TEMP_DIR = os.path.join(
-    os.getcwd(),
-    "temp"
-)
-
-os.makedirs(
-    TEMP_DIR,
-    exist_ok=True
-)
+TEMP_DIR = tempfile.gettempdir()
 
 
 # ======================================================
@@ -2439,6 +2431,12 @@ def pdf():
         cashflows = ertrag.get("cashflows", []) or []
         chart_path = None
 
+        print("========== CASH FLOW DEBUG ==========")
+        print("CASHFLOWS:", cashflows)
+        print("CASHFLOWS LENGTH:", len(cashflows))
+        print("TEMP_DIR:", TEMP_DIR)
+        print("====================================")
+
         if cashflows and len(cashflows) > 1:
             try:
                 values = [num(v, 0) for v in cashflows[1:]]
@@ -2457,6 +2455,10 @@ def pdf():
                 plt.grid(True)
                 plt.axhline(0, linestyle="--")
                 plt.savefig(chart_path, bbox_inches="tight")
+
+                print("CHART PATH:", chart_path)
+                print("CHART EXISTS:", os.path.exists(chart_path))
+                
                 plt.close("all")
                 gc.collect()
             except Exception as e:
