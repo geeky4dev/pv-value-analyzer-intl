@@ -1,5 +1,23 @@
 import React from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+import "leaflet/dist/leaflet.css";
+
+const DefaultIcon = L.icon({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
 
 function ClickHandler({ onClick }) {
   useMapEvents({
@@ -39,7 +57,10 @@ function PVGISMap({ lat, lon, onClick }) {
 
         {/* Marcador en las coords actuales */}
         {hasCoords && (
-          <Marker position={[parseFloat(lat), parseFloat(lon)]}>
+          <Marker
+            position={[parseFloat(lat), parseFloat(lon)]}
+            icon={DefaultIcon}
+          >
             <Popup>
               Lat: {parseFloat(lat).toFixed(5)}, Lon: {parseFloat(lon).toFixed(5)}
             </Popup>
