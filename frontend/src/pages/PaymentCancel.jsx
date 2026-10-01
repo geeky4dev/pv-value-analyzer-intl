@@ -22,14 +22,16 @@ function PaymentCancel() {
                     <div className="d-flex justify-content-center mt-5 mb-4">
 
                         <a
-                            href="https://www.pv-valuator.com/"
+                            href="/"
                             className="btn btn-primary text-white"
                         >
+
                             <i className="bi bi-arrow-left me-2 text-white"></i>
 
                             <span className="text-white">
                                 Home
                             </span>
+
                         </a>
 
                     </div>
