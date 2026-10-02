@@ -767,7 +767,7 @@ function App() {
                                         >
 
                                             <a
-                                                href="https://www.pv-valuator.de/"
+                                                href="https://www.pv-valuator.com/"
                                                 className="btn btn-primary text-white"
                                             >
 
