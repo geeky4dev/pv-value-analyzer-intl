@@ -377,6 +377,10 @@ def grant_free_trial_credit(user):
         ).first()
 
         if existing_trial:
+            if not user.current_plan:
+                user.current_plan = "Free Trial"
+                db.session.commit()
+
             return False
 
         # ==========================================
