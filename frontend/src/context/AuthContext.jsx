@@ -26,57 +26,45 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
 
-
     // =====================================================
-    // LOAD PROFILE FROM SUPABASE
+    // LOAD PROFILE FROM SUPABASE AUTH
     // =====================================================
 
     const loadProfile = async (userId) => {
 
+        const {
+            data: { user: authUser },
+            error
+        } = await supabase.auth.getUser();
 
-        const { data, error } = await supabase
-
-            .from("profiles")
-
-            .select("*")
-
-            .eq("id", userId)
-
-            .maybeSingle();
-
-
-
-        if (error) {
-
+        if (error || !authUser || authUser.id !== userId) {
 
             console.error(
                 "PROFILE LOAD ERROR:",
                 error
             );
 
-
             setProfile(null);
 
-
             return null;
-
         }
 
-
+        const profileData = {
+            id: authUser.id,
+            email: authUser.email || "",
+            name: authUser.user_metadata?.name || "",
+            company: authUser.user_metadata?.company || "",
+            created_at: authUser.created_at || null
+        };
 
         console.log(
             "PROFILE:",
-            data
+            profileData
         );
 
+        setProfile(profileData);
 
-
-        setProfile(data);
-
-
-
-        return data;
-
+        return profileData;
     };
 
 
