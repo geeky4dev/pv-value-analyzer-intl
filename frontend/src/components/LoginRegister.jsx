@@ -169,12 +169,17 @@ function LoginRegister({ onForgotPassword }) {
             // Supabase Auth
             // ---------------------------------------------
 
+            const currentOrigin = window.location.origin;
+
             const {
                 data,
                 error
             } = await signUp(
                 registerEmail,
-                registerPassword
+                registerPassword,
+                name,
+                company,
+                currentOrigin
             );
 
 
@@ -187,39 +192,6 @@ function LoginRegister({ onForgotPassword }) {
                 setRegisterLoading(false);
 
                 return;
-
-            }
-
-
-            // ---------------------------------------------
-            // Profile
-            // ---------------------------------------------
-
-            if (data?.user) {
-
-                const {
-                    error: profileError
-                } = await supabase
-                    .from("profiles")
-                    .insert({
-                        id: data.user.id,
-                        email: registerEmail,
-                        name: name,
-                        company: company
-                    });
-
-
-                if (profileError) {
-
-                    setRegisterError(
-                        profileError.message
-                    );
-
-                    setRegisterLoading(false);
-
-                    return;
-
-                }
 
             }
 
@@ -806,7 +778,7 @@ function LoginRegister({ onForgotPassword }) {
                 </div>
 
             </div>
-{/* =================================================
+            {/* =================================================
                 FOOTER
             ================================================= */}
 

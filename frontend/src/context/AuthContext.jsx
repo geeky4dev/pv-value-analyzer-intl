@@ -152,10 +152,14 @@ export function AuthProvider({ children }) {
                             currentUser.email,
 
                         name:
-                            profileData?.name || "",
+                            profileData?.name ||
+                            currentUser.user_metadata?.name ||
+                            "",
 
                         company:
-                            profileData?.company || ""
+                            profileData?.company ||
+                            currentUser.user_metadata?.company ||
+                            ""
 
                     })
 
@@ -344,23 +348,27 @@ export function AuthProvider({ children }) {
 
                 if (currentUser) {
 
-
                     const profileData =
                         await loadProfile(
                             currentUser.id
                         );
 
+                    const syncData =
+                        await syncUser(
+                            currentUser,
+                            profileData
+                        );
 
+                    if (syncData) {
 
-                    await syncUser(
+                        setProfile({
 
-                        currentUser,
+                            ...profileData,
+                            ...syncData
 
-                        profileData
+                        });
 
-                    );
-
-
+                    }
                 }
                 else {
 
@@ -414,33 +422,38 @@ export function AuthProvider({ children }) {
 
     };
 
-
-
-
-
     // =====================================================
     // REGISTER
     // =====================================================
 
     const signUp = async (
         email,
-        password
+        password,
+        name,
+        company,
+        redirectTo
     ) => {
-
 
         return await supabase.auth.signUp({
 
             email,
 
-            password
+            password,
+
+            options: {
+
+                emailRedirectTo: redirectTo,
+
+                data: {
+                    name: name,
+                    company: company
+                }
+
+            }
 
         });
 
-
     };
-
-
-
 
 
     // =====================================================

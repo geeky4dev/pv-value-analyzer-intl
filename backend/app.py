@@ -298,8 +298,15 @@ def create_user_if_not_exists(
 
     if user:
 
-        return user
+        if name:
+            user.name = name
 
+        if company:
+            user.company = company
+
+        db.session.commit()
+
+        return user
 
 
     try:
@@ -377,6 +384,8 @@ def grant_free_trial_credit(user):
         # ==========================================
 
         account.balance_intl += 1
+
+        user.current_plan = "Free Trial"
 
         transaction = CreditTransaction(
             user_id=user.id,
