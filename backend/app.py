@@ -74,6 +74,17 @@ if not STRIPE_WEBHOOK_SECRET:
         "STRIPE_WEBHOOK_SECRET no está configurada"
     )    
 
+# ======================================================
+# SUPABASE AUTH CONFIGURATION
+# ======================================================
+
+SUPABASE_URL = os.getenv(
+    "SUPABASE_URL"
+)
+
+SUPABASE_ANON_KEY = os.getenv(
+    "SUPABASE_ANON_KEY"
+)
 
 # ======================================================
 # STRIPE PRODUCTS / CREDIT PACKAGES
@@ -307,35 +318,18 @@ def create_user_if_not_exists(
         db.session.flush()
 
 
-
         # ==========================================
-        # WELCOME CREDIT
+        # CREDIT ACCOUNT
+        # Trial credit is granted later,
+        # only after email verification
         # ==========================================
 
         account = CreditAccount(
             user_id=user.id,
-            balance_intl=1
+            balance_intl=0
         )
-
 
         db.session.add(account)
-
-
-
-        transaction = CreditTransaction(
-
-            user_id=user.id,
-
-            type="WELCOME_CREDIT",
-
-            amount=1,
-
-            market="INTL"
-
-        )
-
-
-        db.session.add(transaction)
 
 
 
@@ -354,7 +348,54 @@ def create_user_if_not_exists(
         raise
 
 
+def grant_free_trial_credit(user):
 
+    try:
+
+        account = user.credit_account
+
+        if not account:
+            raise Exception(
+                "Kein Credit-Konto vorhanden"
+            )
+
+        # ==========================================
+        # CHECK IF TRIAL WAS ALREADY GRANTED
+        # ==========================================
+
+        existing_trial = CreditTransaction.query.filter_by(
+            user_id=user.id,
+            type="WELCOME_CREDIT",
+            market="INTL"
+        ).first()
+
+        if existing_trial:
+            return False
+
+        # ==========================================
+        # GRANT 1 FREE CREDIT
+        # ==========================================
+
+        account.balance_intl += 1
+
+        transaction = CreditTransaction(
+            user_id=user.id,
+            type="WELCOME_CREDIT",
+            amount=1,
+            market="INTL"
+        )
+
+        db.session.add(transaction)
+
+        db.session.commit()
+
+        return True
+
+    except Exception:
+
+        db.session.rollback()
+
+        raise
 
 
 def check_credit_available(user):
@@ -1103,6 +1144,44 @@ def create_report_record(
 
     return report
 
+# ======================================================
+# SUPABASE AUTHENTICATION
+# ======================================================
+
+def get_supabase_authenticated_user(access_token):
+
+    if not access_token:
+        return None
+
+    try:
+
+        response = requests.get(
+            f"{SUPABASE_URL}/auth/v1/user",
+            headers={
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {access_token}"
+            },
+            timeout=10
+        )
+
+        if response.status_code != 200:
+            print(
+                "SUPABASE AUTH ERROR:",
+                response.status_code,
+                response.text
+            )
+            return None
+
+        return response.json()
+
+    except Exception as e:
+
+        print(
+            "SUPABASE AUTH EXCEPTION:",
+            e
+        )
+
+        return None
 
 # ======================================================
 # USER SYNCHRONIZATION
@@ -1112,23 +1191,60 @@ def create_report_record(
 @app.route("/users/sync", methods=["POST"])
 def sync_user():
 
-    data = request.get_json()
+    data = request.get_json() or {}
 
-    supabase_user_id = data.get("user_id")
-    email = data.get("email")
+    # --------------------------------------------------
+    # 1. Get Supabase access token
+    # --------------------------------------------------
+
+    access_token = data.get("access_token")
+
+    if not access_token:
+        return jsonify({
+            "error": "Access token required"
+        }), 401
+
+
+    # --------------------------------------------------
+    # 2. Validate token directly with Supabase
+    # --------------------------------------------------
+
+    supabase_user = get_supabase_authenticated_user(
+        access_token
+    )
+
+    if not supabase_user:
+        return jsonify({
+            "error": "Invalid or expired access token"
+        }), 401
+
+
+    # --------------------------------------------------
+    # 3. Get authoritative user data from Supabase
+    # --------------------------------------------------
+
+    supabase_user_id = supabase_user.get("id")
+    email = supabase_user.get("email")
+    email_confirmed_at = supabase_user.get(
+        "email_confirmed_at"
+    )
 
 
     if not supabase_user_id:
         return jsonify({
-            "error": "User id required"
-        }), 400
+            "error": "Supabase user id not available"
+        }), 401
 
 
     if not email:
         return jsonify({
-            "error": "Email required"
+            "error": "Supabase email not available"
         }), 400
 
+
+    # --------------------------------------------------
+    # 4. Create/synchronize local user
+    # --------------------------------------------------
 
     try:
 
@@ -1140,11 +1256,34 @@ def sync_user():
         )
 
 
+        # --------------------------------------------------
+        # 5. Grant FREE TRIAL only after email verification
+        # --------------------------------------------------
+
+        trial_granted = False
+
+        if email_confirmed_at:
+
+            trial_granted = grant_free_trial_credit(
+                user
+            )
+
+
+        # --------------------------------------------------
+        # 6. Return account information
+        # --------------------------------------------------
+
         return jsonify({
 
             "id": str(user.id),
 
             "email": user.email,
+
+            "email_verified": bool(
+                email_confirmed_at
+            ),
+
+            "trial_granted": trial_granted,
 
             "current_plan": (
                 user.current_plan
@@ -1362,25 +1501,61 @@ def pdf():
 
         data = request.get_json() or {}
 
-        # ======================================================
+        # ======================================================              
         # USER / CREDIT VALIDATION
         # ======================================================
 
-        email = data.get("user_email")
-        supabase_user_id = data.get("user_id")
-
-        if not email:
-            return jsonify({"error": "User email required"}), 400
-
-        if not supabase_user_id:
-            return jsonify({"error": "Supabase user id required"}), 400
-
-        user = create_user_if_not_exists(
-            supabase_user_id=supabase_user_id,
-            email=email,
-            name=data.get("user_name"),
-            company=data.get("company")
+        # 1. Get access token from Authorization header
+        auth_header = request.headers.get(
+            "Authorization", ""
         )
+
+        if not auth_header.startswith("Bearer "):
+            return jsonify({
+                "error": "Authorization token required"
+            }), 401
+
+        access_token = auth_header[7:].strip()
+
+        if not access_token:
+            return jsonify({
+                "error": "Access token required"
+            }), 401
+
+        # 2. Validate token with Supabase
+        supabase_user = get_supabase_authenticated_user(
+            access_token
+        )
+
+        if not supabase_user:
+            return jsonify({
+                "error": "Invalid or expired access token"
+            }), 401
+
+        # 3. Get verified user identity
+        supabase_user_id = supabase_user.get("id")
+        email = supabase_user.get("email")
+
+        if not supabase_user_id or not email:
+            return jsonify({
+                "error": "Invalid Supabase user data"
+            }), 401
+
+        # 4. Find existing local user
+        user = User.query.filter_by(
+            id=supabase_user_id
+        ).first()
+
+        if not user:
+            return jsonify({
+                "error": "User not found. Synchronize your account first."
+            }), 404
+
+        # 5. Check account identity
+        if user.email.lower() != email.lower():
+            return jsonify({
+                "error": "Account identity mismatch"
+            }), 403
 
         print("========== CREDIT DEBUG ==========")
         print("USER ID:", user.id)

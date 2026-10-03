@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCredits } from "../context/CreditsContext";
+import { supabase } from "../lib/supabase";
 
 
 function ReportForm({
@@ -473,6 +474,28 @@ function ReportForm({
 
 
       // =====================================================
+      // GET CURRENT SUPABASE SESSION
+      // =====================================================
+
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
+
+      const accessToken =
+        session?.access_token;
+
+      if (!accessToken) {
+
+        throw new Error(
+          "Authentication session expired. Please sign in again."
+        );
+
+      }
+
+
+      // =====================================================
       // SEND PDF TO BACKEND
       // =====================================================
 
@@ -482,8 +505,8 @@ function ReportForm({
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
           },
 
           body: JSON.stringify(pdfData)

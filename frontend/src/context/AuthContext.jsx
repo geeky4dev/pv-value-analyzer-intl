@@ -104,6 +104,21 @@ export function AuthProvider({ children }) {
             import.meta.env.VITE_BACKEND_URL;
 
 
+        // =================================================
+        // GET CURRENT SUPABASE SESSION
+        // =================================================
+
+        const {
+            data: {
+                session
+            }
+        } = await supabase.auth.getSession();
+
+
+        const accessToken =
+            session?.access_token;
+
+
 
         try {
 
@@ -127,17 +142,17 @@ export function AuthProvider({ children }) {
 
                     body: JSON.stringify({
 
+                        access_token:
+                            accessToken,
+
                         user_id:
                             currentUser.id,
-
 
                         email:
                             currentUser.email,
 
-
                         name:
                             profileData?.name || "",
-
 
                         company:
                             profileData?.company || ""
@@ -206,9 +221,7 @@ export function AuthProvider({ children }) {
     useEffect(() => {
 
 
-
         const initializeAuth = async () => {
-
 
 
             const {
@@ -244,13 +257,16 @@ export function AuthProvider({ children }) {
                         currentUser.id
                     );
 
-                const syncData = await syncUser(
 
-                    currentUser,
+                const syncData =
+                    await syncUser(
 
-                    profileData
+                        currentUser,
 
-                );
+                        profileData
+
+                    );
+
 
 
                 if (syncData) {
@@ -264,19 +280,6 @@ export function AuthProvider({ children }) {
                     });
 
                 }
-
-
-if (syncData) {
-
-    setProfile({
-
-        ...profileData,
-
-        ...syncData
-
-    });
-
-}
 
 
             }
@@ -301,7 +304,6 @@ if (syncData) {
         // AUTH STATE CHANGES
         // =================================================
 
-
         const {
             data:
             {
@@ -315,7 +317,6 @@ if (syncData) {
                 _event,
                 session
             ) => {
-
 
 
                 console.log(
@@ -344,7 +345,6 @@ if (syncData) {
                 if (currentUser) {
 
 
-
                     const profileData =
                         await loadProfile(
                             currentUser.id
@@ -359,7 +359,6 @@ if (syncData) {
                         profileData
 
                     );
-
 
 
                 }
@@ -386,7 +385,6 @@ if (syncData) {
 
 
         };
-
 
 
     }, []);
@@ -461,6 +459,10 @@ if (syncData) {
 
 
 
+    // =====================================================
+    // AUTH CONTEXT
+    // =====================================================
+
     return (
 
         <AuthContext.Provider
@@ -505,7 +507,7 @@ if (syncData) {
 // CUSTOM HOOK
 // =====================================================
 
-export function useAuth(){
+export function useAuth() {
 
 
     return useContext(
