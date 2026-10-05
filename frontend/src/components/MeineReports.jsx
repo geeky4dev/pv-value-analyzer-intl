@@ -102,13 +102,15 @@ const MeineReports = () => {
 
     return (
 
-        <Card
-            className="shadow-sm mt-4"
-            style={{
-                backgroundColor: "transparent",
-                border: "none"
-            }}
-        >
+        <div className="container mt-4 min-vh-100">
+
+            <Card
+                className="shadow-sm mt-4"
+                style={{
+                    backgroundColor: "transparent",
+                    border: "none"
+                }}
+            >
 
             <Card.Body>
 
@@ -349,6 +351,8 @@ const MeineReports = () => {
             </Card.Body>
 
         </Card>
+
+         </div>
 
     );
 
